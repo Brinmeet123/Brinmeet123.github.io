@@ -12,24 +12,17 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-
-# Copy everything including next.config.js
 COPY . .
+
+# Ensure public exists even if repo doesn't have it
+RUN mkdir -p public
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Verify next.config.js exists
-RUN test -f next.config.js || (echo "❌ next.config.js missing inside container" && exit 1)
-
-# Build and verify standalone output
 RUN npm run build && \
-    test -f .next/standalone/server.js || ( \
-      echo "❌ Standalone output missing" && \
-      echo "Contents of .next:" && \
-      ls -la .next && \
-      exit 1 \
-    )
+    test -f .next/standalone/server.js && \
+    test -d .next/static
 
 
 FROM node:20-alpine AS runner
