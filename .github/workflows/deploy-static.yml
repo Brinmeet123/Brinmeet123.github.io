@@ -1,0 +1,47 @@
+name: Deploy Static Site
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          OLLAMA_URL: ${{ secrets.OLLAMA_URL || 'http://localhost:11434' }}
+          OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL || 'llama3' }}
+
+      - name: Export static site
+        run: npm run build
+        # Note: For static export, you may need to configure next.config.js
+        # with output: 'export' if deploying to GitHub Pages
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./out
+          # Or use .next/static if using standard Next.js build
+

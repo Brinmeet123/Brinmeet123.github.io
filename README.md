@@ -137,6 +137,26 @@ npm run build
 npm start
 ```
 
+## Deployment
+
+This project includes GitHub Actions workflows for automated deployment. See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+
+### Quick Deploy Options:
+
+1. **Vercel** (Recommended): Connect your GitHub repo to Vercel for automatic deployments
+2. **Docker**: Use the included Dockerfile and GitHub Actions workflow
+3. **Static Export**: Deploy as a static site (note: API routes won't work)
+
+### GitHub Actions Workflows:
+
+- `ci.yml`: Continuous Integration (lint, type check, build)
+- `deploy-vercel.yml`: Deploy to Vercel production
+- `deploy-preview.yml`: Preview deployments for PRs
+- `docker-build.yml`: Build and push Docker images
+- `test.yml`: Run tests and validations
+
+See `.github/workflows/README.md` for more details.
+
 ## Important Disclaimer
 
 **This website is for educational purposes only. All patients and scenarios are fictional. The site does not provide medical advice, diagnosis, or treatment. If you have health concerns, please see a licensed healthcare professional.**
