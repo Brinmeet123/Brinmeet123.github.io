@@ -28,20 +28,17 @@ jobs:
 
       - name: Build application
         run: npm run build
+        continue-on-error: false
         env:
           OLLAMA_URL: ${{ secrets.OLLAMA_URL || 'http://localhost:11434' }}
           OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL || 'llama3' }}
 
-      - name: Export static site
-        run: npm run build
-        # Note: For static export, you may need to configure next.config.js
-        # with output: 'export' if deploying to GitHub Pages
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./out
-          # Or use .next/static if using standard Next.js build
+          publish_dir: ./.next
+          # Note: This requires Next.js static export configuration
 

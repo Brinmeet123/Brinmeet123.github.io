@@ -13,7 +13,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Check Vercel secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ] || [ -z "${{ secrets.VERCEL_ORG_ID }}" ] || [ -z "${{ secrets.VERCEL_PROJECT_ID }}" ]; then
+            echo "secrets_available=false" >> $GITHUB_OUTPUT
+            echo "⚠️ Vercel secrets not configured. Skipping preview deployment."
+          else
+            echo "secrets_available=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to Vercel Preview
+        if: steps.check-secrets.outputs.secrets_available == 'true'
         uses: amondnet/vercel-action@v25
         with:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
@@ -21,4 +32,9 @@ jobs:
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
           vercel-args: '--yes'
           working-directory: ./
+
+      - name: Skip preview notice
+        if: steps.check-secrets.outputs.secrets_available == 'false'
+        run: |
+          echo "::notice::Vercel preview deployment skipped. Configure VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID secrets to enable preview deployments."
 
