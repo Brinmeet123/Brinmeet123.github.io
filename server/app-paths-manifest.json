@@ -1,8 +1,8 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/about/page": "app/about/page.js",
-  "/api/explain-term/route": "app/api/explain-term/route.js",
   "/api/assess/route": "app/api/assess/route.js",
+  "/api/explain-term/route": "app/api/explain-term/route.js",
   "/api/patient-chat/route": "app/api/patient-chat/route.js",
   "/api/test-key/route": "app/api/test-key/route.js",
   "/page": "app/page.js",
