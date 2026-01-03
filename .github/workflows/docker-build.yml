@@ -25,10 +25,12 @@ jobs:
           if [ -z "${{ secrets.DOCKER_USERNAME }}" ] || [ -z "${{ secrets.DOCKER_PASSWORD }}" ]; then
             echo "secrets_available=false" >> $GITHUB_OUTPUT
             echo "image=virtual-diagnostic-simulator" >> $GITHUB_OUTPUT
+            echo "tag=virtual-diagnostic-simulator:latest" >> $GITHUB_OUTPUT
             echo "⚠️ Docker Hub secrets not configured. Building image without pushing."
           else
             echo "secrets_available=true" >> $GITHUB_OUTPUT
             echo "image=${{ secrets.DOCKER_USERNAME }}/virtual-diagnostic-simulator" >> $GITHUB_OUTPUT
+            echo "tag=${{ secrets.DOCKER_USERNAME }}/virtual-diagnostic-simulator:${GITHUB_REF#refs/heads/}-${GITHUB_SHA::8}" >> $GITHUB_OUTPUT
           fi
 
       - name: Login to Docker Hub
@@ -38,27 +40,16 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.check-docker.outputs.image }}
-          tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=sha
-
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' && steps.check-docker.outputs.secrets_available == 'true' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.check-docker.outputs.tag }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            NEXT_TELEMETRY_DISABLED=1
 
       - name: Build notice
         if: steps.check-docker.outputs.secrets_available == 'false'
