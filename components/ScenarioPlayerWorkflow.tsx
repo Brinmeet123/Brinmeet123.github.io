@@ -69,7 +69,7 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
   const [problemRep, setProblemRep] = useState<ProblemRepType | null>(null)
   const [viewedExamSections, setViewedExamSections] = useState<string[]>([])
   const [differentials, setDifferentials] = useState<DifferentialDiagnosis[]>([])
-  const [orderedTests, setOrderedTests] = useState<string[]>([])
+  const [orderedTests, setOrderedTests] = useState<Map<string, { testId: string; result: string }>>(new Map())
   const [reasoningUpdates, setReasoningUpdates] = useState<Array<{ id: string; moved: 'up' | 'down'; reasoning: string }>>([])
   const [finalDiagnosis, setFinalDiagnosis] = useState<FinalDiagnosis | null>(null)
   const [patientExplanation, setPatientExplanation] = useState('')
@@ -121,10 +121,18 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
   }
 
   const handleFinalDiagnosisComplete = async (data: {
-    selectedDifferentialIds: string[]
-    finalDiagnosis: FinalDiagnosis
+    differentialDetailed: Array<{ dxId: string; rank: number; confidence: 'High' | 'Medium' | 'Low'; note?: string }>
+    finalDxId: string | null
+    missingMustNotMiss: string[]
   }) => {
-    setFinalDiagnosis(data.finalDiagnosis)
+    // Convert to legacy format for compatibility
+    if (data.finalDxId) {
+      setFinalDiagnosis({
+        diagnosisId: data.finalDxId,
+        confidence: data.differentialDetailed.find(d => d.dxId === data.finalDxId)?.confidence || 'Medium',
+        nextSteps: ''
+      })
+    }
     setCurrentStep('communication')
   }
 
@@ -153,7 +161,7 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
           problemRep,
           viewedExamSections,
           differentials,
-          orderedTests,
+          orderedTests: Array.from(orderedTests.keys()),
           reasoningUpdates,
           finalDiagnosis,
           patientExplanation,
@@ -318,7 +326,7 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
       )}
 
       {/* Step 6: Differential Diagnosis */}
-      {currentStep === 'differential' && (
+      {currentStep === 'differential' && scenario.diagnosisOptions && (
         <DifferentialDiagnosisBuilder 
           diagnosisOptions={scenario.diagnosisOptions} 
           onComplete={handleDifferentialComplete} 
@@ -329,7 +337,8 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
       {currentStep === 'tests' && (
         <>
           <TestsPanel 
-            tests={scenario.tests} 
+            scenario={scenario}
+            orderedTests={orderedTests}
             onTestsOrdered={(tests) => {
               setOrderedTests(tests)
             }} 
@@ -354,7 +363,7 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
       {/* Step 9: Final Diagnosis */}
       {currentStep === 'final-diagnosis' && (
         <DiagnosisPanel 
-          diagnosisOptions={scenario.diagnosisOptions} 
+          scenario={scenario}
           onSubmit={handleFinalDiagnosisComplete} 
         />
       )}

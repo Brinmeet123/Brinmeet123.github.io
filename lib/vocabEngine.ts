@@ -39,7 +39,7 @@ function normalizeTerm(term: string): string {
 /**
  * Try to find a term in the vocab dictionary with various matching strategies
  */
-function findVocabTerm(term: string): ReturnType<typeof getVocabTerm> {
+function findVocabTerm(term: string): ReturnType<typeof getVocabTerm> | null {
   const normalized = normalizeTerm(term)
   
   // 1. Exact normalized match

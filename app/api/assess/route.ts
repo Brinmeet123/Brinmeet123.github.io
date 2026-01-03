@@ -62,10 +62,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Scenario not found' }, { status: 404 })
     }
 
-    const correctDiagnosis = scenario.diagnosisOptions.find(d => d.isCorrect)
-    const selectedFinalDiagnosis = finalDiagnosis 
-      ? scenario.diagnosisOptions.find(d => d.id === finalDiagnosis.diagnosisId)
-      : scenario.diagnosisOptions.find(d => d.id === finalDiagnosisId)
+    // Get correct diagnosis - support both legacy and new systems
+    let correctDiagnosisName = 'Unknown'
+    if (scenario.finalDxId) {
+      // New system: use finalDxId
+      const correctDx = diagnosisCatalog.find(d => d.id === scenario.finalDxId)
+      correctDiagnosisName = correctDx?.name || scenario.finalDxId
+    } else if (scenario.diagnosisOptions) {
+      // Legacy system: use diagnosisOptions
+      const correctDiagnosis = scenario.diagnosisOptions.find(d => d.isCorrect)
+      correctDiagnosisName = correctDiagnosis?.name || 'Unknown'
+    }
+
+    // Get selected final diagnosis - support both systems
+    let selectedFinalDiagnosisName = 'None'
+    if (finalDxId) {
+      // New system
+      const selectedDx = diagnosisCatalog.find(d => d.id === finalDxId)
+      selectedFinalDiagnosisName = selectedDx?.name || finalDxId
+    } else if (scenario.diagnosisOptions) {
+      // Legacy system
+      const selectedFinalDiagnosis = finalDiagnosis 
+        ? scenario.diagnosisOptions.find(d => d.id === finalDiagnosis.diagnosisId)
+        : scenario.diagnosisOptions.find(d => d.id === finalDiagnosisId)
+      selectedFinalDiagnosisName = selectedFinalDiagnosis?.name || 'None'
+    }
 
     const systemPrompt = `You are an instructor in a fictional diagnostic reasoning simulator for students.
 You will be given comprehensive workflow data from a 12-step diagnostic process:
@@ -128,8 +149,11 @@ ${scenario.patientPersona.keyHistoryPoints.map(p => `- ${p}`).join('\n')}
 RED FLAGS:
 ${scenario.patientPersona.redFlags.map(f => `- ${f}`).join('\n')}
 
-CORRECT DIAGNOSIS: ${correctDiagnosis?.name}
-${scenario.diagnosisOptions.map(d => `- ${d.name} (${d.isCorrect ? 'CORRECT' : 'incorrect'}, ${d.isDangerous ? 'DANGEROUS' : 'not dangerous'}): ${d.explanation}`).join('\n')}
+CORRECT DIAGNOSIS: ${correctDiagnosisName}
+${scenario.diagnosisOptions ? scenario.diagnosisOptions.map(d => `- ${d.name} (${d.isCorrect ? 'CORRECT' : 'incorrect'}, ${d.isDangerous ? 'DANGEROUS' : 'not dangerous'}): ${d.explanation}`).join('\n') : scenario.dxOverrides ? scenario.dxOverrides.map(d => {
+  const dx = diagnosisCatalog.find(c => c.id === d.dxId)
+  return `- ${dx?.name || d.dxId} (${d.yield === 'correct' ? 'CORRECT' : d.yield === 'dangerous-miss' ? 'DANGEROUS' : 'incorrect'}): ${d.explanation}`
+}).join('\n') : 'No diagnosis options defined'}
 
 STUDENT'S PERFORMANCE:
 
@@ -157,7 +181,7 @@ ${chat?.map((m: { role: string; content: string }) => `${m.role === 'doctor' ? '
 Step 3 - Medical Background:
 ${background ? `PMH: ${background.pastMedicalHistory?.join(', ') || 'None'}
 Meds: ${background.medications?.join(', ') || 'None'}
-Allergies: ${background.allergies?.map(a => `${a.allergen} (${a.reaction})`).join(', ') || 'None'}
+Allergies: ${background.allergies?.map((a: { allergen: string; reaction: string }) => `${a.allergen} (${a.reaction})`).join(', ') || 'None'}
 Family History: ${background.familyHistory?.join(', ') || 'None'}
 Social: ${JSON.stringify(background.socialHistory || {})}` : 'Not completed'}
 
@@ -198,7 +222,15 @@ ${orderedTests.map((testId: string) => {
 ` : ''}
 
 Step 8 - Clinical Reasoning:
-${reasoningUpdates?.map((u: any) => `- ${scenario.diagnosisOptions.find(o => o.id === u.id)?.name}: Moved ${u.moved} - ${u.reasoning}`).join('\n') || 'No reasoning updates'}
+${reasoningUpdates?.map((u: any) => {
+  if (scenario.diagnosisOptions) {
+    const opt = scenario.diagnosisOptions.find(o => o.id === u.id)
+    return `- ${opt?.name || u.id}: Moved ${u.moved} - ${u.reasoning}`
+  } else {
+    const dx = diagnosisCatalog.find(d => d.id === u.id)
+    return `- ${dx?.name || u.id}: Moved ${u.moved} - ${u.reasoning}`
+  }
+}).join('\n') || 'No reasoning updates'}
 
 Step 9 - Final Diagnosis:
 Selected: ${finalDxId ? (() => {
@@ -208,7 +240,7 @@ Selected: ${finalDxId ? (() => {
   } catch {
     return finalDxId
   }
-})() : selectedFinalDiagnosis?.name || 'None'}
+})() : selectedFinalDiagnosisName}
 ${finalDxId && scenario.finalDxId ? `Correct Answer: ${scenario.finalDxId === finalDxId ? '✓ CORRECT' : '✗ INCORRECT'}` : ''}
 Confidence: ${finalDiagnosis?.confidence || (differentialDetailed?.find((d: any) => d.dxId === finalDxId)?.confidence) || 'Not specified'}
 ${finalDiagnosis?.confidence === 'Low' ? `Next Steps: ${finalDiagnosis.nextSteps || 'None'}` : ''}

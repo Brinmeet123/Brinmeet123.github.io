@@ -19,7 +19,10 @@ export default function PatientCommunication({ scenario, finalDiagnosis, onCompl
   const [patientQuestions, setPatientQuestions] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const diagnosisName = scenario.diagnosisOptions.find(d => d.id === finalDiagnosis.diagnosisId)?.name || ''
+  // Support both legacy and new diagnosis systems
+  const diagnosisName = scenario.diagnosisOptions 
+    ? scenario.diagnosisOptions.find(d => d.id === finalDiagnosis.diagnosisId)?.name || ''
+    : finalDiagnosis.diagnosisId || ''
 
   const handleAskPatient = async (question: string) => {
     setIsLoading(true)
