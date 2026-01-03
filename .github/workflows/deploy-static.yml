@@ -26,12 +26,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build application
+      - name: Build application for static export
         run: npm run build
         continue-on-error: false
         env:
           OLLAMA_URL: ${{ secrets.OLLAMA_URL || 'http://localhost:11434' }}
           OLLAMA_MODEL: ${{ secrets.OLLAMA_MODEL || 'llama3' }}
+          NODE_ENV: production
+          GITHUB_PAGES: true
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
@@ -39,6 +41,6 @@ jobs:
         continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./.next
-          # Note: This requires Next.js static export configuration
+          publish_dir: ./out
+          cname: brinmeet123.github.io
 

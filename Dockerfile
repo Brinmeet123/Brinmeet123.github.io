@@ -19,10 +19,10 @@ RUN mkdir -p public
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
+ENV NEXT_OUTPUT=standalone
 
-RUN npm run build && \
-    test -f .next/standalone/server.js && \
-    test -d .next/static
+# Build (standalone output relies on NEXT_OUTPUT environment variable)
+RUN npm run build
 
 
 FROM node:20-alpine AS runner

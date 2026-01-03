@@ -2,6 +2,13 @@ import { scenarios } from '@/data/scenarios'
 import ScenarioPlayer from '@/components/ScenarioPlayer'
 import { notFound } from 'next/navigation'
 
+// Generate static params for all scenarios (required for static export)
+export async function generateStaticParams() {
+  return scenarios.map((scenario) => ({
+    id: scenario.id,
+  }))
+}
+
 type Props = {
   params: Promise<{
     id: string
