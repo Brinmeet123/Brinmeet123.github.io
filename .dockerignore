@@ -17,4 +17,6 @@ coverage
 .github
 *.md
 DEPLOYMENT.md
+*.tsbuildinfo
+next-env.d.ts
 
