@@ -25,6 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY package.json package-lock.json* ./
 
 # Copy application code
+# Use .dockerignore to exclude unnecessary files
 COPY . .
 
 # Set environment variables for build
@@ -46,9 +47,7 @@ RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
 # Copy necessary files
-COPY --from=builder /app/public ./public
-
-# Copy standalone build if it exists, otherwise copy regular build
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
