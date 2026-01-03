@@ -1,47 +1,46 @@
 # Multi-stage build for Next.js application (standalone)
 
-# Stage 1: Dependencies
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-# Copy package files
 COPY package.json ./
 COPY package-lock.json* ./
-
-# Install dependencies
 RUN npm ci || npm install
 
-# Stage 2: Builder
+
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy app source
+# Copy everything including next.config.js
 COPY . .
 
-# Build env
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
-# Build (standalone output relies on next.config.js: output="standalone")
-RUN npm run build
+# Verify next.config.js exists
+RUN test -f next.config.js || (echo "❌ next.config.js missing inside container" && exit 1)
 
-# Stage 3: Runner
+# Build and verify standalone output
+RUN npm run build && \
+    test -f .next/standalone/server.js || ( \
+      echo "❌ Standalone output missing" && \
+      echo "Contents of .next:" && \
+      ls -la .next && \
+      exit 1 \
+    )
+
+
 FROM node:20-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# Create non-root user
 RUN addgroup --system --gid 1001 nodejs && adduser --system --uid 1001 nextjs
 
-# Copy standalone server output (includes server.js + minimal node_modules)
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-
-# Copy static + public assets
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
