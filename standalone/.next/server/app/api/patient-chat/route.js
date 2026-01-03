@@ -1,0 +1,18 @@
+"use strict";(()=>{var e={};e.id=723,e.ids=[723],e.modules={399:e=>{e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},3039:(e,t,a)=>{a.r(t),a.d(t,{originalPathname:()=>f,patchFetch:()=>y,requestAsyncStorage:()=>h,routeModule:()=>m,serverHooks:()=>v,staticGenerationAsyncStorage:()=>g});var r={};a.r(r),a.d(r,{POST:()=>d});var n=a(9303),s=a(8716),o=a(3131),i=a(7070),l=a(7054);let p=process.env.OLLAMA_URL||"http://localhost:11434",c=process.env.OLLAMA_MODEL||"llama3";async function u(e){let t=await fetch(`${p}/api/chat`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:c,messages:e,stream:!1})});if(!t.ok){let e=await t.text();throw Error(`Ollama API error: ${t.status} ${e}`)}let a=await t.json();return a.message?.content||a.response||"I'm not sure how to respond to that."}async function d(e){try{let{scenarioId:t,messages:a}=await e.json();if(!t||!a)return i.NextResponse.json({error:"Missing required fields",details:"scenarioId and messages are required"},{status:400});let r=l.M.find(e=>e.id===t);if(!r)return i.NextResponse.json({error:"Scenario not found"},{status:404});let{patientPersona:n,aiInstructions:s}=r,o=`You are a fictional patient in a medical training simulator.
+Your name is ${n.name}, age ${n.age}, gender ${n.gender}.
+Chief complaint: ${n.chiefComplaint}.
+Background: ${n.background}.
+Vital signs: HR ${n.vitals.heartRate} bpm, BP ${n.vitals.bloodPressure}, RR ${n.vitals.respiratoryRate}/min, O2 Sat ${n.vitals.oxygenSat}, Temp ${n.vitals.temperature}.
+
+${s.patientStyle}
+
+CRITICAL RULES:
+${s.behaviorRules.map(e=>`- ${e}`).join("\n")}
+
+DO NOT reveal directly:
+${s.doNotRevealDirectly.map(e=>`- ${e}`).join("\n")}
+
+Key history points you know (reveal only if asked specifically):
+${n.keyHistoryPoints.map(e=>`- ${e}`).join("\n")}
+
+Answer ONLY as the patient in first person. Keep responses short and conversational, like a real patient would speak. Do NOT give medical advice or diagnoses.`,p=[{role:"system",content:o},...a.map(e=>({role:"doctor"===e.role?"user":"assistant",content:e.content}))];console.log("Calling Ollama API with",p.length,"messages");let c=await u(p);return console.log("Ollama response received successfully"),i.NextResponse.json({message:c})}catch(a){console.error("Error in patient-chat:",a);let e="Failed to get patient response",t=a?.message||"Unknown error";return a?.message?.includes("ECONNREFUSED")||a?.message?.includes("fetch failed")?(e="Cannot connect to Ollama. Make sure Ollama is running on localhost:11434",t="Start Ollama with: ollama serve"):a?.message&&(e=a.message),i.NextResponse.json({error:e,details:t,type:a?.name||"Error"},{status:500})}}let m=new n.AppRouteRouteModule({definition:{kind:s.x.APP_ROUTE,page:"/api/patient-chat/route",pathname:"/api/patient-chat",filename:"route",bundlePath:"app/api/patient-chat/route"},resolvedPagePath:"/home/runner/work/Brinmeet123.github.io/Brinmeet123.github.io/app/api/patient-chat/route.ts",nextConfigOutput:"standalone",userland:r}),{requestAsyncStorage:h,staticGenerationAsyncStorage:g,serverHooks:v}=m,f="/api/patient-chat/route";function y(){return(0,o.patchFetch)({serverHooks:v,staticGenerationAsyncStorage:g})}}};var t=require("../../../webpack-runtime.js");t.C(e);var a=e=>t(t.s=e),r=t.X(0,[276,972,54],()=>a(3039));module.exports=r})();
