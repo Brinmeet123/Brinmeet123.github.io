@@ -5,11 +5,14 @@ FROM node:20-alpine AS deps
 WORKDIR /app
 
 # Copy package files
-COPY package.json ./
-COPY package-lock.json* ./
+COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci --legacy-peer-deps || npm install
+RUN if [ -f package-lock.json ]; then \
+      npm ci --legacy-peer-deps || npm ci; \
+    else \
+      npm install --legacy-peer-deps; \
+    fi
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
