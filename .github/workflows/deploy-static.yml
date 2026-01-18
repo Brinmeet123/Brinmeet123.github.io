@@ -38,9 +38,9 @@ jobs:
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
-        continue-on-error: true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./out
-          cname: brinmeet123.github.io
+          # Deploys to gh-pages branch root
+          # After this runs, configure GitHub Pages in Settings > Pages to use gh-pages branch
 
