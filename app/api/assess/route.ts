@@ -3,9 +3,11 @@ import { scenarios } from '@/data/scenarios'
 import { resolveTest, calculateTestScore } from '@/lib/testEngine'
 import { resolveDx, calculateDxScore, calculateFinalDxScore, calculateEfficiencyPenalty, checkMissingMustNotMiss } from '@/lib/dxEngine'
 import { diagnosisCatalog } from '@/data/diagnosisCatalog'
+import { getMockAssessment } from '@/lib/mockResponses'
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3'
+const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
 async function callOllama(messages: Array<{ role: string; content: string }>) {
   const res = await fetch(`${OLLAMA_URL}/api/chat`, {
@@ -86,6 +88,58 @@ export async function POST(request: NextRequest) {
         ? scenario.diagnosisOptions.find(d => d.id === finalDiagnosis.diagnosisId)
         : scenario.diagnosisOptions.find(d => d.id === finalDiagnosisId)
       selectedFinalDiagnosisName = selectedFinalDiagnosis?.name || 'None'
+    }
+
+    // Demo mode: return mock assessment
+    if (DEMO_MODE) {
+      const mockAssessment = getMockAssessment()
+      // Still calculate test and diagnosis scores from actual data
+      let totalScore = 0
+      const scoreBreakdown: Record<string, number> = {}
+
+      if (orderedTests && orderedTests.length > 0) {
+        const testScore = orderedTests.reduce((sum: number, testId: string) => {
+          try {
+            const resolved = resolveTest(scenario, testId)
+            return sum + calculateTestScore(resolved.yield)
+          } catch {
+            return sum
+          }
+        }, 0)
+        scoreBreakdown.tests = testScore
+        totalScore += testScore
+      }
+
+      if (differentialDetailed && differentialDetailed.length > 0) {
+        const dxScore = differentialDetailed.reduce((sum: number, item: any) => {
+          try {
+            const resolved = resolveDx(scenario, item.dxId)
+            return sum + calculateDxScore(resolved.yield)
+          } catch {
+            return sum
+          }
+        }, 0)
+        const finalScore = calculateFinalDxScore(finalDxId, scenario.finalDxId)
+        const efficiencyPenalty = calculateEfficiencyPenalty(differentialDetailed.length)
+        const missing = checkMissingMustNotMiss(
+          differentialDetailed.map((d: any) => d.dxId),
+          scenario.requiredMustNotMiss
+        )
+        const missingPenalty = missing.length * -3
+        scoreBreakdown.diagnosis = dxScore + finalScore + efficiencyPenalty + missingPenalty
+        totalScore += scoreBreakdown.diagnosis
+      }
+
+      const maxScore = 45
+      const scorePercentage = Math.max(0, Math.min(100, Math.round((totalScore / maxScore) * 100)))
+
+      return NextResponse.json({
+        ...mockAssessment,
+        totalScore,
+        totalScorePercentage: scorePercentage,
+        maxScore,
+        scoreBreakdown
+      })
     }
 
     const systemPrompt = `You are an instructor in a fictional diagnostic reasoning simulator for students.
@@ -359,6 +413,15 @@ Provide your comprehensive assessment as JSON with scores for each category.`
   } catch (error: any) {
     console.error('Error in assess:', error)
     
+    // If Ollama fails and not in demo mode, check if we should fall back to demo mode
+    const shouldUseDemo = process.env.DEMO_MODE === 'true' || process.env.FALLBACK_TO_DEMO === 'true'
+    
+    if (shouldUseDemo && (error?.message?.includes('ECONNREFUSED') || error?.message?.includes('fetch failed'))) {
+      console.log('Ollama unavailable, falling back to demo mode')
+      const mockAssessment = getMockAssessment()
+      return NextResponse.json(mockAssessment)
+    }
+    
     let errorMessage = 'Failed to generate assessment'
     if (error?.message?.includes('ECONNREFUSED') || error?.message?.includes('fetch failed')) {
       errorMessage = 'Cannot connect to Ollama. Make sure Ollama is running on localhost:11434'
@@ -367,7 +430,8 @@ Provide your comprehensive assessment as JSON with scores for each category.`
     return NextResponse.json(
       { 
         error: errorMessage,
-        details: error?.message || 'Unknown error'
+        details: error?.message || 'Unknown error',
+        demoModeAvailable: 'Set DEMO_MODE=true to use mock responses without Ollama'
       },
       { status: 500 }
     )

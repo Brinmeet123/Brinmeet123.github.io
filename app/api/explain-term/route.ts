@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getMockTermExplanation } from '@/lib/mockResponses'
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434'
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3'
+const DEMO_MODE = process.env.DEMO_MODE === 'true'
 
 async function callOllama(messages: Array<{ role: string; content: string }>) {
   const res = await fetch(`${OLLAMA_URL}/api/chat`, {
@@ -26,15 +28,28 @@ async function callOllama(messages: Array<{ role: string; content: string }>) {
 }
 
 export async function POST(request: NextRequest) {
+  // Store body data outside try block for fallback use
+  let bodyData: { selectedText: string; contextText?: string; viewMode: 'simple' | 'clinical' } = { 
+    selectedText: '', 
+    viewMode: 'simple' 
+  }
+  
   try {
     const body = await request.json()
     const { selectedText, contextText, sourceType, scenarioMeta, viewMode } = body
+    bodyData = { selectedText, contextText, viewMode: viewMode || 'simple' }
 
     if (!selectedText || typeof selectedText !== 'string') {
       return NextResponse.json(
         { error: 'Missing or invalid selectedText' },
         { status: 400 }
       )
+    }
+
+    // Demo mode: return mock explanation
+    if (DEMO_MODE) {
+      const mockExplanation = getMockTermExplanation(selectedText, contextText, viewMode)
+      return NextResponse.json(mockExplanation)
     }
 
     // Safety check: if the term looks like a request for medical advice
@@ -148,10 +163,26 @@ If the term is used as a clinical descriptor (like "tachycardic" meaning "having
     }
   } catch (error: any) {
     console.error('Error in explain-term API:', error)
+    
+    // If Ollama fails, try to return a basic mock explanation
+    const shouldUseDemo = process.env.DEMO_MODE === 'true' || process.env.FALLBACK_TO_DEMO === 'true'
+    
+    if (shouldUseDemo && (error?.message?.includes('ECONNREFUSED') || error?.message?.includes('fetch failed'))) {
+      console.log('Ollama unavailable, falling back to demo mode')
+      // Use stored body data from try block scope
+      const mockExplanation = getMockTermExplanation(
+        bodyData.selectedText || 'term',
+        bodyData.contextText,
+        bodyData.viewMode || 'simple'
+      )
+      return NextResponse.json(mockExplanation)
+    }
+    
     return NextResponse.json(
       {
         error: 'Failed to explain term',
-        details: error.message || 'Unknown error'
+        details: error.message || 'Unknown error',
+        demoModeAvailable: 'Set DEMO_MODE=true to use mock responses without Ollama'
       },
       { status: 500 }
     )

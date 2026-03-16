@@ -160,18 +160,31 @@ export default function ScenarioPlayer({ scenario }: Props) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get assessment')
+        const errorData = await response.json().catch(() => ({}))
+        const errorMsg = errorData?.error || 'Failed to get assessment'
+        throw new Error(errorMsg)
       }
 
       const result = await response.json()
+      
+      // Check if result has error
+      if (result.error) {
+        throw new Error(result.error)
+      }
+      
       setAssessment(result)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error:', error)
+      const errorMessage = error?.message || 'Unknown error occurred'
+      const isOllamaError = errorMessage.includes('Ollama') || errorMessage.includes('ECONNREFUSED')
+      
       setAssessment({
         overallRating: 'Error',
-        summary: 'There was an error generating your assessment. Please try again.',
+        summary: isOllamaError 
+          ? 'Cannot connect to Ollama. Please ensure Ollama is running (ollama serve) or set DEMO_MODE=true to use mock responses.'
+          : 'There was an error generating your assessment. Please try again.',
         strengths: [],
-        areasForImprovement: ['Unable to generate assessment'],
+        areasForImprovement: [errorMessage],
         diagnosisFeedback: '',
         missedKeyHistoryPoints: [],
         testSelectionFeedback: '',

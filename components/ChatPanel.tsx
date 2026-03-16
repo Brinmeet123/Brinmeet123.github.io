@@ -109,7 +109,12 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
       const data = await response.json()
 
       if (data.error) {
-        throw new Error(data.error)
+        // Show user-friendly error with demo mode suggestion
+        let errorMsg = data.error
+        if (data.details && data.details.includes('Ollama')) {
+          errorMsg += '\n\n💡 Tip: Set DEMO_MODE=true to use mock responses without Ollama.'
+        }
+        throw new Error(errorMsg)
       }
 
       if (!data.message) {
@@ -132,6 +137,8 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
           errorContent = "⚠️ Error: API rate limit exceeded. Please try again later."
         } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
           errorContent = "⚠️ Error: Network error. Please check your connection and that the server is running."
+        } else if (errorMsg.includes('ollama') || errorMsg.includes('econnrefused')) {
+          errorContent = "⚠️ Error: Cannot connect to Ollama. Make sure Ollama is running (ollama serve) or set DEMO_MODE=true to use mock responses."
         } else {
           errorContent = `⚠️ Error: ${error.message}`
         }

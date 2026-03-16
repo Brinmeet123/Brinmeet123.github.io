@@ -9,6 +9,7 @@ A Next.js-based medical training simulator that allows students to practice clin
 - **Diagnostic Testing**: Order tests and view results
 - **Clinical Reasoning Practice**: Formulate differential diagnoses and receive detailed feedback
 - **Educational Assessment**: Get comprehensive feedback on your performance
+- **Demo Mode**: Run without Ollama using realistic mock responses for public deployment
 
 ## Tech Stack
 
@@ -17,12 +18,20 @@ A Next.js-based medical training simulator that allows students to practice clin
 - **AI**: Ollama (local LLM - no API key needed!)
 - **Deployment**: Ready for Vercel or similar platforms
 
+## Live Demo
+
+🚀 **[Try the Live Demo](https://brinmeet123.github.io/)** (coming soon)
+
+The hosted demo uses **Demo Mode** with realistic mock responses, so it works without requiring Ollama. For the full AI-powered experience with dynamic patient responses, run the app locally with Ollama.
+
+---
+
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm/yarn
-- Ollama installed and running locally
+- **Node.js 20+** and npm 9+ (specified in `package.json` engines)
+- Ollama installed and running locally (optional - see Demo Mode below)
 
 ### Installation
 
@@ -46,11 +55,20 @@ ollama serve
 npm install
 ```
 
-5. (Optional) Create a `.env.local` file to customize Ollama settings:
+5. (Optional) Create a `.env.local` file to customize settings:
 ```env
+# For Ollama (local AI mode)
 OLLAMA_URL=http://localhost:11434
 OLLAMA_MODEL=llama3
+
+# For Demo Mode (works without Ollama - use for public deployment)
+DEMO_MODE=true
 ```
+
+> **Environment Variables Reference:**
+> - `DEMO_MODE` (optional): Set to `true` to use mock responses without Ollama. Required for public deployment.
+> - `OLLAMA_URL` (optional): Ollama API URL. Default: `http://localhost:11434`
+> - `OLLAMA_MODEL` (optional): Ollama model name. Default: `llama3`
 
 6. Run the development server:
 ```bash
@@ -58,6 +76,22 @@ npm run dev
 ```
 
 7. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Demo Mode vs Local Mode
+
+**Demo Mode** (`DEMO_MODE=true`):
+- ✅ Works without Ollama - perfect for public deployment
+- ✅ Uses realistic mock responses for patient interactions
+- ✅ All UI features work (history, exam, tests, diagnosis, debrief)
+- ⚠️ Responses are pre-generated, not dynamically AI-powered
+- 📝 **Use this for**: GitHub Pages, Vercel public deployments, demos
+
+**Local Mode** (default, requires Ollama):
+- ✅ Full AI-powered patient interactions using Ollama
+- ✅ Dynamic, contextual responses based on scenario instructions
+- ✅ AI-generated educational assessments
+- ⚠️ Requires Ollama running locally
+- 📝 **Use this for**: Local development, learning, full AI experience
 
 ### Testing Ollama Connection
 
@@ -79,9 +113,11 @@ curl http://localhost:3000/api/test-key
 4. If you get an error, check that Ollama is running
 
 **Common Issues:**
-- If you see "Cannot connect to Ollama": Make sure Ollama is running with `ollama serve`
+- If you see "Cannot connect to Ollama": 
+  - Make sure Ollama is running with `ollama serve`, OR
+  - Set `DEMO_MODE=true` in `.env.local` to use mock responses
 - If you see "model not found": Pull the model with `ollama pull llama3` (or your chosen model)
-- If you see connection errors: Check that Ollama is running on `http://localhost:11434`
+- If you see connection errors: Check that Ollama is running on `http://localhost:11434`, or enable Demo Mode
 
 ## Project Structure
 
@@ -139,13 +175,68 @@ npm start
 
 ## Deployment
 
+### Deploy with Vercel (Recommended)
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Brinmeet123/Brinmeet123.github.io&env=DEMO_MODE&envDescription=Set%20to%20true%20to%20use%20mock%20responses%20without%20Ollama&envLink=https://github.com/Brinmeet123/Brinmeet123.github.io%23environment-variables)
+
+**One-Click Deploy:**
+1. Click the "Deploy with Vercel" button above
+2. Connect your GitHub repository
+3. Configure environment variables (see below)
+4. Deploy!
+
+**Manual Vercel Setup:**
+1. Install Vercel CLI: `npm i -g vercel`
+2. Run `vercel` in the project directory
+3. Follow the prompts
+4. Set environment variables in Vercel dashboard
+
+**Required Environment Variables for Vercel:**
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DEMO_MODE` | **Yes** (for public) | `false` | Set to `true` to use mock responses (no Ollama needed) |
+| `OLLAMA_URL` | No | `http://localhost:11434` | Ollama API URL (only if not using DEMO_MODE) |
+| `OLLAMA_MODEL` | No | `llama3` | Ollama model name (only if not using DEMO_MODE) |
+
+**Recommended Vercel Settings:**
+- **Framework Preset:** Next.js (auto-detected)
+- **Build Command:** `npm run build` (default)
+- **Output Directory:** `.next` (default)
+- **Install Command:** `npm install` (default)
+- **Node.js Version:** 20.x (specified in package.json)
+
+**For Public Deployment:**
+```env
+DEMO_MODE=true
+```
+
+**For Full AI Mode (requires Ollama accessible from Vercel):**
+```env
+DEMO_MODE=false
+OLLAMA_URL=https://your-ollama-instance.com
+OLLAMA_MODEL=llama3
+```
+
+> ⚠️ **Note:** Ollama typically runs locally. For Vercel deployment, use `DEMO_MODE=true` unless you have a remote Ollama instance accessible from the internet.
+
+### Other Deployment Options
+
 This project includes GitHub Actions workflows for automated deployment. See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
 
-### Quick Deploy Options:
+1. **Docker**: 
+   - Use the included Dockerfile and GitHub Actions workflow
+   - Set `DEMO_MODE=true` environment variable in Docker for public deployment
 
-1. **Vercel** (Recommended): Connect your GitHub repo to Vercel for automatic deployments
-2. **Docker**: Use the included Dockerfile and GitHub Actions workflow
-3. **Static Export**: Deploy as a static site (note: API routes won't work)
+2. **Static Export**: 
+   - Deploy as a static site (note: API routes won't work)
+   - Good for GitHub Pages, but limited functionality
+   - Set `NEXT_OUTPUT=export` environment variable
+
+**⚠️ Important for Public Deployment:**
+- Set `DEMO_MODE=true` environment variable to enable mock responses
+- This allows the app to work without Ollama in production
+- The hosted demo uses Demo Mode so it works publicly without requiring users to install Ollama
 
 ### GitHub Actions Workflows:
 
