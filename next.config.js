@@ -4,6 +4,14 @@ const isDev = process.env.NODE_ENV === 'development'
 
 const nextConfig = {
   reactStrictMode: true,
+  webpack: (config, { dev, isServer }) => {
+    // Dev: slow first compile or cold start can exceed default chunk load timeout in the browser.
+    if (dev && !isServer) {
+      config.output = config.output || {}
+      config.output.chunkLoadTimeout = 300000
+    }
+    return config
+  },
   output: isDev
     ? undefined
     : process.env.NEXT_OUTPUT === 'standalone'

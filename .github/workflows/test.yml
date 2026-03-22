@@ -34,5 +34,4 @@ jobs:
       - name: Build application
         run: npm run build
         continue-on-error: false
-        env:
 

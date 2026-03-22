@@ -50,8 +50,6 @@ jobs:
 
       - name: Build application
         run: npm run build
-        env:
-          # These are optional for build, but Next.js might need them
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
