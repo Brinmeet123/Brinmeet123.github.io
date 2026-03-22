@@ -1,0 +1,1 @@
+{"ok":true,"openAIConfigured":false,"demoModeEnv":true,"aiWillUse":"Mock responses only","hint":"Set OPENAI_API_KEY (sk-...) on Vercel or in .env.local."}
