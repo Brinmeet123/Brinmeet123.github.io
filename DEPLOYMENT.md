@@ -38,6 +38,12 @@ Vercel is the recommended platform for Next.js applications.
    - Push to `main` or `master` branch
    - The workflow will automatically deploy
 
+#### Git branch and root (required)
+
+Vercel must build from the **Next.js source** on **`main`**, not from **`gh-pages`**. The `gh-pages` branch only contains the static GitHub Pages export (HTML and assets) and has **no** `app` or `pages` directory, so `next build` fails with “Couldn't find any `pages` or `app` directory”.
+
+In Vercel: **Settings → Git → Production Branch** → set to `main`. **Settings → General → Root Directory** → leave empty (repository root).
+
 #### Environment Variables in Vercel:
 
 Add these in Vercel Dashboard → Project Settings → Environment Variables:
