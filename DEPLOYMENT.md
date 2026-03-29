@@ -44,6 +44,8 @@ Vercel must build from the **Next.js source** on **`main`**, not from **`gh-page
 
 In Vercel: **Settings → Git → Production Branch** → set to `main`. **Settings → General → Root Directory** → leave empty (repository root).
 
+If you see **“No Next.js version detected”**, Vercel is not using the folder that contains this repo’s `package.json` (almost always wrong **Root Directory**, or still building **`gh-pages`**). Fix both settings above, then **Redeploy** the latest `main` commit.
+
 #### Environment Variables in Vercel:
 
 Add these in Vercel Dashboard → Project Settings → Environment Variables:

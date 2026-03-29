@@ -37,8 +37,25 @@ export async function callLLM(messages: LLMMessage[]): Promise<string> {
   })
 
   if (!res.ok) {
-    const err = await res.text()
-    throw new Error(`OpenAI API error: ${res.status} ${err}`)
+    const text = await res.text()
+    let message = `OpenAI API error: ${res.status} ${text}`
+    try {
+      const j = JSON.parse(text) as { error?: { code?: string; message?: string; type?: string } }
+      const code = j.error?.code
+      const apiMsg = j.error?.message
+      if (code === 'insufficient_quota' || apiMsg?.toLowerCase().includes('quota')) {
+        message =
+          'OpenAI quota or billing exhausted (insufficient_quota). Add credits or a payment method at https://platform.openai.com/account/billing — or set DEMO_MODE=true on the server for mock responses without the API.'
+      } else if (res.status === 429 && code === 'rate_limit_exceeded') {
+        message =
+          'OpenAI rate limit exceeded. Wait a short time and try again, or reduce request frequency.'
+      } else if (apiMsg) {
+        message = `OpenAI API error: ${res.status} — ${apiMsg}`
+      }
+    } catch {
+      /* keep message with raw text */
+    }
+    throw new Error(message)
   }
 
   const data = await res.json()

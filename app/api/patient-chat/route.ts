@@ -80,12 +80,22 @@ Answer ONLY as the patient in first person. Keep responses short and conversatio
     }
 
     const errorMessage = error?.message || 'Failed to get patient response'
+    const isQuota =
+      errorMessage.includes('insufficient_quota') ||
+      errorMessage.includes('quota or billing') ||
+      errorMessage.toLowerCase().includes('exceeded your current quota')
+    const hint = isQuota
+      ? 'Your API key is fine; OpenAI returned no quota. Add billing at https://platform.openai.com/account/billing or set DEMO_MODE=true for mocks.'
+      : errorMessage.includes('OPENAI_API_KEY is not set')
+        ? 'Set OPENAI_API_KEY (sk-...) in Vercel env and redeploy, or DEMO_MODE=true for mocks.'
+        : 'Set DEMO_MODE=true for mock responses, or fix the OpenAI error above.'
+
     return NextResponse.json(
       {
         error: errorMessage,
-        details: error?.message || 'Unknown error',
+        details: isQuota ? undefined : errorMessage,
         type: error?.name || 'Error',
-        demoModeAvailable: 'Set DEMO_MODE=true for mock responses, or add OPENAI_API_KEY (sk-...).',
+        demoModeAvailable: hint,
       },
       { status: 500 }
     )

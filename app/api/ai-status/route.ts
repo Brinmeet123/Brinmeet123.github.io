@@ -13,7 +13,7 @@ export async function GET() {
         ? 'Mock responses only'
         : 'No API key — set OPENAI_API_KEY or DEMO_MODE=true',
     hint: hasOpenAI
-      ? 'Key from https://platform.openai.com/api-keys (sk-). Redeploy after changes.'
+      ? 'Key from https://platform.openai.com/api-keys (sk-). Redeploy after changes. If chat returns 429 insufficient_quota, add billing at https://platform.openai.com/account/billing or set DEMO_MODE=true.'
       : 'Set OPENAI_API_KEY (sk-...) on Vercel or in .env.local.',
   })
 }

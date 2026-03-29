@@ -1,5 +1,4 @@
 {
   "framework": "nextjs",
-  "buildCommand": "next build",
-  "installCommand": "npm ci"
+  "ignoreCommand": "if [ \"$VERCEL_GIT_COMMIT_REF\" = \"gh-pages\" ]; then echo \"Skipping: gh-pages is static export only (no package.json). In Vercel → Settings → Git, set Production Branch to main.\"; exit 0; else exit 1; fi"
 }
