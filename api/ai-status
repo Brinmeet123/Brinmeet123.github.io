@@ -1,1 +1,1 @@
-{"ok":true,"openAIConfigured":false,"demoModeEnv":true,"aiWillUse":"Mock responses only","hint":"Set OPENAI_API_KEY (sk-...) on Vercel or in .env.local."}
+{"ok":true,"provider":"ollama","model":"llama3.2","ollamaBaseUrl":"http://127.0.0.1:11434","ollamaApiKeyConfigured":false,"demoModeEnv":true,"ollamaEnabled":false,"aiWillUse":"Mock responses only (DEMO_MODE=true)","hint":"Unset DEMO_MODE or set to false to use Ollama for real AI (requires ollama serve and a pulled model).","openAIConfigured":false}
