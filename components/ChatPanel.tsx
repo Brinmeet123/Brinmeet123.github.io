@@ -40,7 +40,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   )
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesScrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Listen for question insertion from QuestionBank
@@ -71,8 +71,14 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   }, [initialMessages])
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+    const el = messagesScrollRef.current
+    if (!el) return
+    const scrollToBottom = () => {
+      el.scrollTop = el.scrollHeight
+    }
+    scrollToBottom()
+    requestAnimationFrame(scrollToBottom)
+  }, [messages, isLoading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -196,14 +202,18 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full">
+    <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full min-h-0 max-h-[min(85vh,720px)]">
       <h2 className="text-lg font-semibold text-gray-900 mb-4">History & Interview</h2>
       <VocabContextBlock
         source="chat"
         scenarioId={scenario.id}
         text={messages.map((m) => m.content).join('\n')}
+        className="flex-1 min-h-0 flex flex-col"
       >
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4 pr-2">
+      <div
+        ref={messagesScrollRef}
+        className="flex-1 min-h-0 overflow-y-auto mb-4 space-y-4 pr-2 overscroll-contain"
+      >
         {messages.map((msg, idx) => (
           <div
             key={idx}
@@ -241,7 +251,6 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
       </div>
       </VocabContextBlock>
       <form onSubmit={handleSubmit} className="flex gap-2">

@@ -55,6 +55,33 @@ export function isCloudLLMConfigured(): boolean {
   return shouldUseOllamaLLM()
 }
 
+/**
+ * Patient chat should only call Ollama when a reachable endpoint is configured.
+ * On Vercel (and similar), default OLLAMA_BASE_URL points at localhost — unreachable — so use preset replies instead.
+ * On Vercel with a remote Ollama URL, set OLLAMA_BASE_URL to that host. Set PATIENT_CHAT_PRESET_ONLY=true to always use presets (skip Ollama) even locally.
+ */
+export function shouldAttemptOllamaForPatientChat(): boolean {
+  if (process.env.DEMO_MODE === 'true') return false
+  if (process.env.PATIENT_CHAT_PRESET_ONLY === 'true') return false
+  const base = (process.env.OLLAMA_BASE_URL || 'http://127.0.0.1:11434').replace(/\/$/, '')
+  let hostname = ''
+  try {
+    const url = new URL(base.startsWith('http') ? base : `http://${base}`)
+    hostname = url.hostname.toLowerCase()
+  } catch {
+    return true
+  }
+  const isLocalHost =
+    hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
+  if (!isLocalHost) return true
+  const onRemoteHost =
+    process.env.VERCEL === '1' ||
+    process.env.NETLIFY === 'true' ||
+    Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME)
+  if (onRemoteHost) return false
+  return true
+}
+
 export async function callLLM(messages: LLMMessage[]): Promise<string> {
   const url = `${OLLAMA_BASE_URL}/v1/chat/completions`
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }

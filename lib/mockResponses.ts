@@ -11,8 +11,11 @@ export function getMockPatientResponse(
     .filter(m => m.role === 'doctor' || m.role === 'user')
     .pop()?.content.toLowerCase() || ''
 
-  // Generate contextual responses based on common questions
-  if (lastDoctorMessage.includes('hello') || lastDoctorMessage.includes('hi') || lastDoctorMessage.includes('how are you')) {
+  // Greeting only — do not use .includes('hi') (matches "this", "which", etc.)
+  if (
+    /\b(hello|hi|hey)\b/.test(lastDoctorMessage) ||
+    lastDoctorMessage.includes('how are you')
+  ) {
     return "Hi doctor. I'm not feeling well. Can you help me?"
   }
 
@@ -32,7 +35,12 @@ export function getMockPatientResponse(
     return "I'd say about a 7 out of 10. It's pretty uncomfortable."
   }
 
-  if (lastDoctorMessage.includes('better') || lastDoctorMessage.includes('worse') || lastDoctorMessage.includes('what makes')) {
+  if (
+    lastDoctorMessage.includes('better') ||
+    lastDoctorMessage.includes('worse') ||
+    lastDoctorMessage.includes('what makes') ||
+    lastDoctorMessage.includes('anything make')
+  ) {
     return "It gets worse when I take a deep breath. Nothing really makes it better."
   }
 

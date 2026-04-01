@@ -9,13 +9,15 @@ type Props = {
   source: SourceType
   scenarioId?: string
   text?: string
+  /** Merged onto the wrapper (e.g. flex layout for scroll regions) */
+  className?: string
 }
 
 /**
  * Wraps text content to provide context for vocabulary highlighting
  * Stores context metadata in data attributes for the highlight system
  */
-export default function VocabContextBlock({ children, source, scenarioId, text }: Props) {
+export default function VocabContextBlock({ children, source, scenarioId, text, className }: Props) {
   // If text is provided, use it; otherwise extract from children
   const blockText = text || (typeof children === 'string' ? children : '')
 
@@ -24,7 +26,7 @@ export default function VocabContextBlock({ children, source, scenarioId, text }
       data-vocab-source={source}
       data-vocab-scenario-id={scenarioId || ''}
       data-vocab-text={blockText}
-      className="vocab-context-block"
+      className={['vocab-context-block', className].filter(Boolean).join(' ')}
     >
       {children}
     </div>

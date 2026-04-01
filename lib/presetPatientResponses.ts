@@ -20,6 +20,15 @@ type FallbackScenario = {
   defaultAnswer: string
 }
 
+/** Maps scenario ids in data/scenarios.ts to FALLBACK_SCENARIOS keys (stable even if titles change). */
+const SCENARIO_ID_TO_FALLBACK_KEY: Record<string, string> = {
+  'chest-pain-er': 'chest-pain-er',
+  'sudden-headache-er': 'sudden-severe-headache',
+  'acute-sob-er': 'acute-shortness-of-breath',
+  'rlq-abdominal-pain': 'rlq-abdominal-pain',
+  'fever-confusion': 'fever-confusion',
+}
+
 function normalize(text: string): string {
   return text
     .toLowerCase()
@@ -57,6 +66,12 @@ function scoreQuestion(question: string, qa: FallbackQA): number {
 }
 
 function detectScenarioBucket(scenario: Scenario): FallbackScenario | null {
+  const mappedKey = SCENARIO_ID_TO_FALLBACK_KEY[scenario.id]
+  if (mappedKey) {
+    const mapped = FALLBACK_SCENARIOS.find((b) => b.key === mappedKey)
+    if (mapped) return mapped
+  }
+
   const title = normalize(scenario?.title || '')
   const chiefComplaint = normalize(scenario?.patientPersona?.chiefComplaint || '')
   const combined = `${title} ${chiefComplaint}`
@@ -113,8 +128,8 @@ export function getPresetPatientResponse(
     }
   }
 
-  // Threshold to avoid bad matches
-  if (!bestQA || bestScore < 6) {
+  // Threshold to avoid bad matches (lowered slightly so keyword-only matches still count)
+  if (!bestQA || bestScore < 5) {
     return bucket.defaultAnswer
   }
 
@@ -205,6 +220,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
         patterns: [
           'what makes it worse',
           'anything make it worse',
+          'does anything make it worse',
           'does movement make it worse',
           'worse with activity',
         ],
@@ -218,6 +234,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
           'anything help',
           'anything relieve it',
           'does rest help',
+          'does anything help',
         ],
         keywords: ['better', 'relieve', 'help', 'rest'],
       },
@@ -321,7 +338,13 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
   {
     key: 'sudden-severe-headache',
     titleMatchers: ['sudden severe headache', 'severe headache', 'headache'],
-    complaintMatchers: ['sudden headache', 'headache started one hour ago', 'neck hurts'],
+    complaintMatchers: [
+      'sudden headache',
+      'headache started one hour ago',
+      'neck hurts',
+      'worst headache',
+      'worst headache of my life',
+    ],
     defaultAnswer:
       "I have a really severe headache that started suddenly, and my neck hurts too. Bright lights make it worse.",
     qa: [
@@ -381,6 +404,36 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
           'is your neck stiff',
         ],
         keywords: ['neck', 'stiff', 'stiffness'],
+      },
+      {
+        id: 'radiation',
+        answer:
+          "It's mostly all over my head and neck. It doesn't really feel like it's going down my arm like a heart thing — it's my head and neck.",
+        patterns: [
+          'does the pain travel',
+          'does it radiate',
+          'go anywhere else',
+          'move anywhere',
+          'does the pain move',
+          'pain move',
+        ],
+        keywords: ['radiate', 'travel', 'move', 'else', 'arm'],
+      },
+      {
+        id: 'worse',
+        answer:
+          "Bright lights and moving my head make it worse. Lying still in a dark room helps a little.",
+        patterns: [
+          'what makes it worse',
+          'does anything make it worse',
+          'anything make it worse',
+          'worse with activity',
+          'anything make it better',
+          'what makes it better',
+          'does anything help',
+          'anything relieve',
+        ],
+        keywords: ['worse', 'better', 'anything'],
       },
       {
         id: 'photophobia',
