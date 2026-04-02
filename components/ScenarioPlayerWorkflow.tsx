@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useSession } from 'next-auth/react'
 import { Scenario, StabilityStatus, HPI, MedicalBackground, ProblemRepresentation as ProblemRepType, DifferentialDiagnosis, FinalDiagnosis, Plan } from '@/data/scenarios'
 import { getMockAssessment } from '@/lib/mockResponses'
 import DoctorPatientScene from './DoctorPatientScene'
@@ -32,6 +33,9 @@ type AssessmentResult = {
   diagnosisFeedback: string
   missedKeyHistoryPoints: string[]
   testSelectionFeedback: string
+  totalScore?: number
+  totalScorePercentage?: number
+  maxScore?: number
   debriefStructured?: {
     summary: string
     strengths: string[]
@@ -69,6 +73,7 @@ type WorkflowStep =
   | 'debrief'
 
 export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenario }) {
+  const { data: session, status: sessionStatus } = useSession()
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('safety')
   
   // Workflow state
@@ -195,6 +200,25 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
       }
       
       setAssessment(result)
+
+      if (
+        sessionStatus === 'authenticated' &&
+        session?.user &&
+        typeof result.totalScore === 'number' &&
+        Number.isFinite(result.totalScore)
+      ) {
+        void fetch('/api/scenario-progress', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            scenarioId: scenario.id,
+            score: Math.round(result.totalScore),
+            status: typeof result.overallRating === 'string' ? result.overallRating : 'completed',
+          }),
+        }).catch(() => {
+          /* non-blocking */
+        })
+      }
     } catch (error: any) {
       console.error('Error:', error)
       const errorMessage = error?.message || 'Unknown error occurred'

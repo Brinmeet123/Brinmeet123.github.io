@@ -3,7 +3,8 @@
 // argv check: survives a stray NODE_ENV=production while running `next dev`.
 //
 // If you see "missing required error components, refreshing..." or missing ./NNN.js chunks:
-// stop all dev servers (only one process on port 3000), run `npm run dev:fresh`, hard-refresh the browser.
+// 1) Stop every `next dev` (only one process may bind port 3001). 2) `npm run dev:clean`
+//    (cleans .next, kills port 3001, starts dev with webpack cache off). 3) Hard-refresh the browser.
 // Avoid deleting `.next` while `next dev` is running; disable "Console Ninja"–style extensions if they hook fs.
 const isDevServer =
   process.argv.includes('dev') ||
@@ -12,20 +13,13 @@ const isDevServer =
 module.exports = {
   reactStrictMode: true,
   /**
-   * Dev-only: named chunk/module IDs reduce HMR/webpack-runtime mismatches ("Cannot find module './NNN.js'").
-   * Optional: NEXT_DEV_WEBPACK_NO_CACHE=1 disables webpack filesystem cache in dev (slower, most reliable).
-   * Do not touch config.output — that has caused flaky chunk IDs.
+   * Do not override chunkIds/moduleIds — that breaks Next.js App Router server chunks and causes
+   * "Cannot find module './NNN.js'" after HMR. Only disable webpack filesystem cache in dev.
+   * Opt in to cache with NEXT_DEV_WEBPACK_CACHE=1 (faster rebuilds, occasional chunk glitches possible).
    */
   webpack: (config, { dev }) => {
-    if (dev) {
-      config.optimization = {
-        ...config.optimization,
-        chunkIds: 'named',
-        moduleIds: 'named',
-      }
-      if (process.env.NEXT_DEV_WEBPACK_NO_CACHE === '1') {
-        config.cache = false
-      }
+    if (dev && process.env.NEXT_DEV_WEBPACK_CACHE !== '1') {
+      config.cache = false
     }
     return config
   },

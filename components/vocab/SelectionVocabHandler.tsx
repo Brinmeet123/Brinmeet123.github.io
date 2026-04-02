@@ -15,13 +15,26 @@ type Props = {
   viewMode?: ViewMode
 }
 
+function isFormFieldFocused(): boolean {
+  const el = document.activeElement
+  if (!el || !(el instanceof HTMLElement)) return false
+  const tag = el.tagName.toLowerCase()
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return true
+  if (el.isContentEditable) return true
+  return Boolean(el.closest('input, textarea, select, [contenteditable="true"]'))
+}
+
 function isInsideInput(node: Node | null): boolean {
   if (!node) return false
+  if (node.nodeType === Node.TEXT_NODE) {
+    return isInsideInput(node.parentElement)
+  }
   if (node.nodeType === Node.ELEMENT_NODE) {
     const element = node as HTMLElement
     const tag = element.tagName?.toLowerCase()
-    if (tag === 'input' || tag === 'textarea' || element.isContentEditable) return true
-    if (element.closest('input, textarea, [contenteditable="true"]')) return true
+    if (tag === 'input' || tag === 'textarea' || tag === 'select') return true
+    if (element.isContentEditable) return true
+    if (element.closest('input, textarea, select, [contenteditable="true"]')) return true
   }
   return false
 }
@@ -52,7 +65,9 @@ export default function SelectionVocabHandler({ viewMode = 'simple' }: Props) {
   const rangeRef = useRef<Range | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
-  const { saveMedicalTerm, hasTermId, isLoaded } = useVocabStore()
+  const { saveMedicalTerm, hasTermId, isLoaded, canSave: sessionCanSave } = useVocabStore()
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
 
   const handleClose = useCallback(() => {
     abortRef.current?.abort()
@@ -62,6 +77,8 @@ export default function SelectionVocabHandler({ viewMode = 'simple' }: Props) {
     setMedicalTerm(null)
     setIsLoadingAI(false)
     setAiError(null)
+    setSaveError(null)
+    setIsSaving(false)
     rangeRef.current = null
     window.getSelection()?.removeAllRanges()
   }, [])
@@ -93,6 +110,10 @@ export default function SelectionVocabHandler({ viewMode = 'simple' }: Props) {
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
 
     debounceTimerRef.current = setTimeout(() => {
+      if (isFormFieldFocused()) {
+        return
+      }
+
       const selection = window.getSelection()
       if (!selection || selection.rangeCount === 0) {
         handleClose()
@@ -197,15 +218,25 @@ export default function SelectionVocabHandler({ viewMode = 'simple' }: Props) {
     }
   }, [selectedText, updatePositionFromRange])
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!medicalTerm || !isLoaded || isLoadingAI) return
-    saveMedicalTerm(medicalTerm)
+    setSaveError(null)
+    setIsSaving(true)
+    try {
+      const ok = await saveMedicalTerm(medicalTerm)
+      if (!ok) {
+        setSaveError('Sign in to save vocabulary to your account.')
+      }
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (!selectedText || !selectionPosition) return null
 
-  const canSave = Boolean(medicalTerm) && !isLoadingAI && !aiError
+  const canSave = Boolean(medicalTerm) && !isLoadingAI && !aiError && sessionCanSave
   const saved = medicalTerm ? hasTermId(medicalTerm.id) : false
+  const combinedError = saveError ?? aiError
 
   return (
     <MedicalTermPopover
@@ -216,11 +247,12 @@ export default function SelectionVocabHandler({ viewMode = 'simple' }: Props) {
       onSave={handleSave}
       viewMode={viewMode}
       isSaved={saved}
-      isSaving={false}
+      isSaving={isSaving}
       canSave={canSave}
       isLoading={isLoadingAI}
       isAIGenerated={isAIGeneratedTerm(medicalTerm)}
-      errorMessage={aiError}
+      errorMessage={combinedError}
+      authHint={!sessionCanSave && medicalTerm ? 'Sign in to save terms to your account.' : null}
     />
   )
 }

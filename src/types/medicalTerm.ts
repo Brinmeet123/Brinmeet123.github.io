@@ -23,6 +23,9 @@ export type SavedVocabTerm = {
   termId: string
   savedAt: string
   mastered: boolean
+  /** When the term is not in the local catalog (e.g. server-only row) */
+  sourceLabel?: string
+  sourceDefinition?: string
 }
 
 /**

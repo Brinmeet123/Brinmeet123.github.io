@@ -2,10 +2,12 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { useVocabStore } from '@/lib/useVocabStore'
 
 export default function VocabPage() {
-  const { list, remove, setMastered, count, masteredCount, stats, isLoaded } = useVocabStore()
+  const { status } = useSession()
+  const { list, remove, setMastered, count, masteredCount, stats, isLoaded, isAuthed } = useVocabStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [viewMode, setViewMode] = useState<'simple' | 'clinical'>('simple')
@@ -44,7 +46,19 @@ export default function VocabPage() {
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">My Vocabulary</h1>
-        <p className="text-gray-600">Terms you saved from scenarios — stored on this device only.</p>
+        <p className="text-gray-600">
+          {isAuthed
+            ? 'Terms you save from scenarios are stored in your account.'
+            : 'Sign in to save terms to your account and access them from any device.'}
+        </p>
+        {status !== 'loading' && !isAuthed && (
+          <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <Link href="/login" className="font-semibold text-teal-800 hover:text-teal-900 underline">
+              Log in or create an account
+            </Link>{' '}
+            to save vocabulary and sync your list.
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-3 gap-4 mb-6">
@@ -146,13 +160,14 @@ export default function VocabPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           {filteredTerms.map(({ saved, term }) => {
-            const title = term?.term ?? saved.termId
+            const title = term?.term ?? saved.sourceLabel ?? saved.termId
             const definition =
               term != null
                 ? viewMode === 'simple'
                   ? term.shortDefinition
                   : term.definition
-                : 'Definition not found — term may have been removed from the local dictionary.'
+                : saved.sourceDefinition ??
+                  'Definition not found — term may have been removed from the local dictionary.'
 
             return (
               <div key={saved.id} className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
@@ -165,7 +180,7 @@ export default function VocabPage() {
                   </div>
                   <button
                     type="button"
-                    onClick={() => remove(saved.id)}
+                    onClick={() => void remove(saved.id)}
                     className="text-gray-400 hover:text-red-600 transition shrink-0"
                     title="Remove"
                   >

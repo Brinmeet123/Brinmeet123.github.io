@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
 import type { MedicalTerm } from '@/src/types/medicalTerm'
-import { getMedicalTermById } from '@/src/lib/medicalTerms'
+import { getMedicalTermById, lookupMedicalTerm, normalizeLookupKey } from '@/src/lib/medicalTerms'
 import {
   loadVocabStorage,
   persistVocabStorage,
-  upsertSavedTerm,
   removeSavedTerm,
   toggleMastered,
   type VocabStorageV2,
@@ -17,7 +17,31 @@ export type EnrichedSavedTerm = {
   term: MedicalTerm | null
 }
 
+type ApiVocabRow = {
+  id: string
+  term: string
+  definition: string
+  createdAt: string
+}
+
+function apiRowToSaved(row: ApiVocabRow): import('@/src/types/medicalTerm').SavedVocabTerm {
+  const key = normalizeLookupKey(row.term)
+  const lookup = lookupMedicalTerm(key) || lookupMedicalTerm(row.term)
+  const termId = lookup?.id ?? `db:${row.id}`
+  return {
+    id: row.id,
+    termId,
+    savedAt: row.createdAt,
+    mastered: false,
+    sourceLabel: lookup ? undefined : row.term,
+    sourceDefinition: lookup ? undefined : row.definition,
+  }
+}
+
 export function useVocabStore() {
+  const { status } = useSession()
+  const isAuthed = status === 'authenticated'
+
   const [data, setData] = useState<VocabStorageV2>(() => ({
     version: 2,
     saved: [],
@@ -26,23 +50,92 @@ export function useVocabStore() {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
+    if (status === 'loading') return
+
+    if (isAuthed) {
+      let cancelled = false
+      fetch('/api/vocab')
+        .then((r) => {
+          if (!r.ok) throw new Error('vocab fetch failed')
+          return r.json() as Promise<ApiVocabRow[]>
+        })
+        .then((rows) => {
+          if (cancelled) return
+          const local = loadVocabStorage()
+          const saved = rows.map(apiRowToSaved)
+          setData({
+            version: 2,
+            saved,
+            stats: {
+              ...local.stats,
+              totalSaved: saved.length,
+              mastered: saved.filter((s) => s.mastered).length,
+            },
+          })
+          setIsLoaded(true)
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setData((prev) => ({ ...prev, saved: [], stats: { ...prev.stats, totalSaved: 0, mastered: 0 } }))
+            setIsLoaded(true)
+          }
+        })
+      return () => {
+        cancelled = true
+      }
+    }
+
     setData(loadVocabStorage())
     setIsLoaded(true)
-  }, [])
+  }, [isAuthed, status])
 
   useEffect(() => {
-    if (isLoaded) {
-      persistVocabStorage(data)
-    }
-  }, [data, isLoaded])
+    if (!isLoaded || isAuthed) return
+    persistVocabStorage(data)
+  }, [data, isLoaded, isAuthed])
 
-  const saveMedicalTerm = useCallback((term: MedicalTerm): boolean => {
-    setData((prev) => {
-      const { data: next } = upsertSavedTerm(prev, term.id)
-      return next
-    })
-    return true
-  }, [])
+  const saveMedicalTerm = useCallback(
+    async (term: MedicalTerm): Promise<boolean> => {
+      if (!isAuthed) return false
+
+      const res = await fetch('/api/vocab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          term: term.term,
+          definition: term.shortDefinition || term.definition,
+        }),
+      })
+
+      if (!res.ok) return false
+
+      const row = (await res.json()) as ApiVocabRow
+      const base = apiRowToSaved(row)
+      const saved: import('@/src/types/medicalTerm').SavedVocabTerm = {
+        ...base,
+        termId: term.id,
+        sourceLabel: base.sourceLabel,
+        sourceDefinition: base.sourceDefinition,
+      }
+
+      setData((prev) => {
+        const rest = prev.saved.filter((s) => s.id !== saved.id && s.termId !== term.id)
+        const nextSaved = [saved, ...rest]
+        return {
+          ...prev,
+          saved: nextSaved,
+          stats: {
+            ...prev.stats,
+            totalSaved: nextSaved.length,
+            mastered: nextSaved.filter((s) => s.mastered).length,
+          },
+        }
+      })
+
+      return true
+    },
+    [isAuthed]
+  )
 
   const hasTermId = useCallback(
     (termId: string): boolean => {
@@ -51,9 +144,16 @@ export function useVocabStore() {
     [data.saved]
   )
 
-  const remove = useCallback((savedId: string) => {
-    setData((prev) => removeSavedTerm(prev, savedId))
-  }, [])
+  const remove = useCallback(
+    async (savedId: string) => {
+      if (isAuthed) {
+        const res = await fetch(`/api/vocab?id=${encodeURIComponent(savedId)}`, { method: 'DELETE' })
+        if (!res.ok) return
+      }
+      setData((prev) => removeSavedTerm(prev, savedId))
+    },
+    [isAuthed]
+  )
 
   const removeByTermId = useCallback((termId: string) => {
     setData((prev) => ({
@@ -114,5 +214,7 @@ export function useVocabStore() {
     count: data.saved.length,
     masteredCount: data.saved.filter((s) => s.mastered).length,
     stats: data.stats,
+    isAuthed,
+    canSave: isAuthed,
   }
 }

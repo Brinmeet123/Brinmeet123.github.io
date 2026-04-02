@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String?
+  username   String   @unique
+  email      String   @unique
+  password   String
+  image      String?
+  createdAt  DateTime @default(now())
+  subscribed Boolean  @default(true)
+  totalScore Int      @default(0)
+  streak     Int      @default(0)
+
+  vocab    Vocab[]
+  progress ScenarioProgress[]
+}
+
+model Vocab {
+  id         String   @id @default(cuid())
+  term       String
+  definition String
+  userId     String
+  createdAt  DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, term])
+}
+
+model ScenarioProgress {
+  id         String   @id @default(cuid())
+  scenarioId String
+  score      Int
+  status     String
+  userId     String
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, scenarioId])
+}

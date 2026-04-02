@@ -18,6 +18,8 @@ type Props = {
   isLoading?: boolean
   isAIGenerated?: boolean
   errorMessage?: string | null
+  /** Shown when save is disabled because the user is not signed in */
+  authHint?: string | null
 }
 
 export default function MedicalTermPopover({
@@ -33,6 +35,7 @@ export default function MedicalTermPopover({
   isLoading = false,
   isAIGenerated = false,
   errorMessage = null,
+  authHint = null,
 }: Props) {
   const popoverRef = useRef<HTMLDivElement>(null)
   const [moreDetails, setMoreDetails] = useState(false)
@@ -175,6 +178,12 @@ export default function MedicalTermPopover({
             </p>
           )}
         </div>
+      )}
+
+      {authHint && !isSaved && (
+        <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5 mb-2">
+          {authHint}
+        </p>
       )}
 
       <div className="flex gap-2 pt-1">
