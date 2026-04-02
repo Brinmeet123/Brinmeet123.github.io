@@ -3,9 +3,10 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 
-COPY package.json ./
-COPY package-lock.json* ./
-RUN npm ci || npm install
+COPY package.json package-lock.json* ./
+# postinstall runs `prisma generate` — schema must exist before npm ci
+COPY prisma ./prisma/
+RUN npm ci
 
 
 FROM node:20-alpine AS builder
@@ -20,6 +21,11 @@ RUN mkdir -p public
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV NEXT_OUTPUT=standalone
+# Auth.js + Prisma: allow CI/Docker build-args to override defaults
+ARG AUTH_SECRET=build-time-placeholder-change-in-deployment-min-32-chars
+ARG DATABASE_URL=file:./prisma/dev.db
+ENV AUTH_SECRET=$AUTH_SECRET
+ENV DATABASE_URL=$DATABASE_URL
 
 # Build (standalone output relies on NEXT_OUTPUT environment variable)
 RUN npm run build

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import type { Prisma } from '@prisma/client'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
     const { scenarioId, score, status } = parsed.data
     const userId = session.user.id
 
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const prev = await tx.scenarioProgress.findUnique({
         where: {
           userId_scenarioId: { userId, scenarioId },

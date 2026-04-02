@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
-import { Prisma } from '@prisma/client'
+import {
+  PrismaClientInitializationError,
+  PrismaClientKnownRequestError,
+} from '@prisma/client/runtime/library'
 import { prisma } from '@/lib/prisma'
 import { resend, getResendFromAddress } from '@/lib/resend'
 
 function registerErrorResponse(e: unknown): { error: string; status: number } {
   console.error('register error:', e)
 
-  if (e instanceof Prisma.PrismaClientInitializationError) {
+  if (e instanceof PrismaClientInitializationError) {
     return {
       error:
         'Database is not reachable. Set DATABASE_URL in .env.local (use file:./dev.db — relative to the prisma folder), then run: npx prisma migrate dev',
@@ -16,7 +19,7 @@ function registerErrorResponse(e: unknown): { error: string; status: number } {
     }
   }
 
-  if (e instanceof Prisma.PrismaClientKnownRequestError) {
+  if (e instanceof PrismaClientKnownRequestError) {
     if (e.code === 'P2002') {
       return { error: 'An account with this email or username already exists.', status: 409 }
     }

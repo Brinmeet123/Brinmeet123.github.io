@@ -10,7 +10,10 @@ jobs:
   test:
     name: Run Tests
     runs-on: ubuntu-latest
-    
+    env:
+      AUTH_SECRET: github-actions-ci-placeholder-min-32-chars-not-secret
+      DATABASE_URL: file:./prisma/dev.db
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
