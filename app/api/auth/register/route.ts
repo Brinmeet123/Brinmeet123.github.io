@@ -6,7 +6,7 @@ import {
   PrismaClientKnownRequestError,
 } from '@prisma/client/runtime/library'
 import { prisma } from '@/lib/prisma'
-import { resend, getResendFromAddress } from '@/lib/resend'
+import { getResend, getResendFromAddress, warnIfDefaultFromInProduction } from '@/lib/resend'
 
 function registerErrorResponse(e: unknown): { error: string; status: number } {
   console.error('register error:', e)
@@ -104,23 +104,34 @@ export async function POST(req: Request) {
       },
     })
 
+    const resend = getResend()
     if (resend) {
+      warnIfDefaultFromInProduction()
       try {
-        const { error: resendError } = await resend.emails.send({
+        const welcomeText = welcomePlainText(user.name ?? user.username)
+        const result = await resend.emails.send({
           from: getResendFromAddress(),
           to: user.email,
           subject: 'Welcome to Virtual Diagnostic Simulator',
           html: welcomeHtml(user.name ?? user.username),
+          text: welcomeText,
         })
-        // Resend returns errors in the response; it does not throw (see resend-node issues).
-        if (resendError) {
-          console.error('Resend welcome email failed:', resendError)
+        // Resend returns { data, error }; failures are usually not thrown (see resend-node issues).
+        if (result.error) {
+          const err = result.error
+          console.error('[resend] welcome email rejected:', {
+            name: err.name,
+            message: err.message,
+            statusCode: err.statusCode,
+          })
+        } else if (result.data?.id) {
+          console.info('[resend] welcome email accepted, id:', result.data.id)
         }
       } catch (e) {
-        console.error('Resend welcome email failed:', e)
+        console.error('[resend] welcome email threw:', e)
       }
     } else if (process.env.NODE_ENV === 'production') {
-      console.warn('RESEND_API_KEY is not set; welcome email was not sent.')
+      console.warn('[resend] RESEND_API_KEY is missing or empty; welcome email was not sent.')
     }
 
     return NextResponse.json(
@@ -148,6 +159,19 @@ function welcomeHtml(displayName: string): string {
     <p style="margin-top: 24px; font-size: 14px; color: #64748b;">— The VDS team</p>
   </body>
 </html>`
+}
+
+function welcomePlainText(displayName: string): string {
+  const greeting = displayName ? `Welcome, ${displayName}!` : 'Welcome!'
+  return `${greeting}
+
+Thank you for joining the Virtual Diagnostic Simulator.
+
+You can save medical vocabulary from scenarios and track your scores on your dashboard as you practice.
+
+We will also share occasional updates about new cases and—down the road—shadowing and observation opportunities.
+
+— The VDS team`
 }
 
 function escapeHtml(s: string): string {
