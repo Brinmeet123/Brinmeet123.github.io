@@ -106,15 +106,21 @@ export async function POST(req: Request) {
 
     if (resend) {
       try {
-        await resend.emails.send({
+        const { error: resendError } = await resend.emails.send({
           from: getResendFromAddress(),
           to: user.email,
           subject: 'Welcome to Virtual Diagnostic Simulator',
           html: welcomeHtml(user.name ?? user.username),
         })
+        // Resend returns errors in the response; it does not throw (see resend-node issues).
+        if (resendError) {
+          console.error('Resend welcome email failed:', resendError)
+        }
       } catch (e) {
         console.error('Resend welcome email failed:', e)
       }
+    } else if (process.env.NODE_ENV === 'production') {
+      console.warn('RESEND_API_KEY is not set; welcome email was not sent.')
     }
 
     return NextResponse.json(
