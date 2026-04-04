@@ -1,116 +1,346 @@
 /**
- * Mock responses for demo mode (DEMO_MODE=true) when Ollama is not used
+ * Mock responses for demo mode (DEMO_MODE=true) when Ollama is not used.
+ * Strictly keyed by scenario id from data/scenarios.ts — no shared/global answer pools.
  */
+
+export type MockIntentCategory =
+  | 'symptom'
+  | 'timing'
+  | 'progression'
+  | 'location'
+  | 'radiation'
+  | 'red_flags'
+  | 'history'
+  | 'meds'
+  | 'greeting'
+  | 'severity'
+  | 'allergies'
+  | 'family'
+  | 'smoking'
+  | 'alcohol'
+
+/** Keyword hints per category (UI guided questions + common variants). */
+export const categories = {
+  symptom: ['feel', 'symptom', "what's wrong", 'feeling', 'tell me more', 'chief complaint'],
+  timing: ['when', 'start', 'how long', 'onset'],
+  progression: ['better', 'worse', 'change', 'what makes'],
+  location: ['where', 'location', 'exactly'],
+  radiation: ['anywhere else', 'spread', 'radiat', 'go anywhere', 'move anywhere'],
+  red_flags: ['shortness of breath', 'nausea', 'sweating', 'sweat'],
+  history: ['medical condition', 'conditions', 'history', 'health problems'],
+  meds: ['medication', 'medicine', 'take anything', 'meds', 'prescription'],
+} as const
+
+type ScenarioResponseRow = {
+  symptom: string
+  timing: string
+  progression: string
+  location: string
+  radiation: string
+  red_flags: string
+  history: string
+  meds: string
+  greeting?: string
+  severity?: string
+  allergies?: string
+  family?: string
+  smoking?: string
+  alcohol?: string
+}
+
+const scenarioResponses: Record<string, ScenarioResponseRow> = {
+  'chest-pain-er': {
+    symptom: 'I feel a heavy pressure in my chest.',
+    timing: 'It started about 30 minutes ago.',
+    progression: "It's getting worse.",
+    location: 'Right in the center of my chest.',
+    radiation: 'Yes, it goes to my left arm.',
+    red_flags: 'Yes, I feel short of breath and sweaty.',
+    history: 'I have high blood pressure.',
+    meds: 'I take medication for that.',
+    greeting: "Hi doctor. I'm not feeling well. Can you help me?",
+    severity: "I'd say about a 7 out of 10. It's pretty uncomfortable.",
+    allergies: "I'm allergic to penicillin. It gives me a rash.",
+    family: 'My father had a heart attack when he was 55. My mother has diabetes.',
+    smoking: 'I used to smoke, but I quit about 5 years ago.',
+    alcohol: 'I have a glass of wine with dinner occasionally. Maybe 2-3 times a week.',
+  },
+  'sudden-headache-er': {
+    symptom:
+      'I have a really bad headache. It feels like a sudden, intense pressure.',
+    timing: 'It started suddenly about an hour ago.',
+    progression: "It's getting worse, not better.",
+    location: "It's mainly at the back of my head.",
+    radiation: 'No, it stays in the same spot.',
+    red_flags: 'I do feel a bit nauseous.',
+    history: 'No major medical conditions.',
+    meds: "I'm not taking any medications.",
+    greeting: "Hi doctor. I'm not feeling well. Can you help me?",
+    severity: "It's the worst headache I've ever had — like a 10 out of 10.",
+    allergies: "I don't have any known drug allergies.",
+    family: 'No heart attacks or strokes in my close family that I know of.',
+    smoking: "I don't smoke.",
+    alcohol: 'I drink socially sometimes, but not much.',
+  },
+  'acute-sob-er': {
+    symptom:
+      "I can't catch my breath. It came on suddenly and I feel really winded.",
+    timing: 'It started very suddenly, within the last hour or so.',
+    progression: 'Sitting still helps a little, but moving makes it much worse.',
+    location:
+      "It's not really one sharp spot — my chest feels tight and I can't get enough air.",
+    radiation:
+      'The worst of it is my breathing, but one of my legs has felt a bit swollen lately.',
+    red_flags:
+      'Yes — my oxygen feels low, my heart is racing, and I was on a long flight recently.',
+    history: 'I have high blood pressure. No lung disease that I know of.',
+    meds: 'I take medication for my blood pressure.',
+    greeting: "Hi doctor. I'm not feeling well. Can you help me?",
+    severity: "It's bad — I can barely talk in full sentences.",
+    allergies: "I don't have any known allergies.",
+    family: 'Nothing major that I know of.',
+    smoking: 'I quit years ago.',
+    alcohol: 'I drink occasionally.',
+  },
+  'rlq-abdominal-pain': {
+    symptom:
+      'My stomach hurts really badly — it started near my belly button and moved to the lower right.',
+    timing: 'It started earlier today.',
+    progression: 'Walking and moving make it worse. Nothing really makes it better.',
+    location: 'Right now it hurts most in my lower right abdomen.',
+    radiation: "It started central and moved — it doesn't really go to my shoulder or chest.",
+    red_flags: 'I feel nauseous and I had a bit of fever at home.',
+    history: "I'm pretty healthy otherwise — no big medical problems.",
+    meds: "I don't take any regular medications.",
+    greeting: "Hi doctor. I'm not feeling well. Can you help me?",
+    severity: "It's pretty severe — maybe an 8 out of 10.",
+    allergies: "I don't have any known allergies.",
+    family: 'No surgical emergencies like this in my family.',
+    smoking: "I don't smoke.",
+    alcohol: 'I drink a little on weekends.',
+  },
+  'fever-confusion': {
+    symptom: "I don't feel right — I've had a fever and everything feels foggy and confused.",
+    timing: 'This came on today.',
+    progression: "I think I'm getting worse — I'm more out of it than earlier.",
+    location: "It's not really one spot — I feel sick all over.",
+    radiation: "No — it's not like pain that travels. I just feel terrible and confused.",
+    red_flags: 'I have a high fever and my blood pressure feels low to me.',
+    history: 'I have diabetes.',
+    meds: "I take medicines for my diabetes, but I'm fuzzy on the names right now.",
+    greeting: "Hi doctor. I'm not feeling well. Can you help me?",
+    severity: "I feel awful — it's hard to even think straight.",
+    allergies: "I don't remember any drug allergies.",
+    family: 'My family brought me in because I was confused.',
+    smoking: "I don't smoke.",
+    alcohol: 'I barely drink.',
+  },
+}
+
+function getLastDoctorMessage(
+  messages: Array<{ role: string; content: string }>
+): string {
+  const last = [...messages]
+    .reverse()
+    .find((m) => m.role === 'doctor' || m.role === 'user')
+  return last?.content ?? ''
+}
+
+/**
+ * Map the doctor's message to a response category. Order matters (e.g. "anywhere" vs "when").
+ */
+export function detectIntent(message: string): MockIntentCategory | null {
+  const msg = message.toLowerCase()
+
+  if (/\b(hello|hi|hey)\b/.test(msg) || msg.includes('how are you')) {
+    return 'greeting'
+  }
+
+  if (
+    msg.includes('anywhere else') ||
+    msg.includes('go anywhere') ||
+    msg.includes('move anywhere') ||
+    msg.includes('does it spread') ||
+    msg.includes('radiat') ||
+    (msg.includes('anywhere') && (msg.includes('else') || msg.includes('pain')))
+  ) {
+    return 'radiation'
+  }
+
+  if (
+    msg.includes('medical condition') ||
+    msg.includes('medical conditions') ||
+    (msg.includes('conditions') &&
+      (msg.includes('medical') || msg.includes('any') || msg.includes('health'))) ||
+    (msg.includes('health') && msg.includes('problem'))
+  ) {
+    return 'history'
+  }
+
+  if (
+    msg.includes('medication') ||
+    msg.includes('medications') ||
+    msg.includes('medicine') ||
+    msg.includes('take anything') ||
+    msg.includes('prescription') ||
+    /\bmeds\b/.test(msg)
+  ) {
+    return 'meds'
+  }
+
+  if (
+    msg.includes('shortness') ||
+    msg.includes('nausea') ||
+    (msg.includes('sweat') && !msg.includes('sweater'))
+  ) {
+    return 'red_flags'
+  }
+
+  if (
+    /\bwhere\b/.test(msg) ||
+    msg.includes('location') ||
+    (msg.includes('exactly') && msg.includes('feel'))
+  ) {
+    return 'location'
+  }
+
+  if (
+    msg.includes('better') ||
+    msg.includes('worse') ||
+    msg.includes('what makes') ||
+    msg.includes('anything make')
+  ) {
+    return 'progression'
+  }
+
+  if (
+    /\bwhen\b/.test(msg) ||
+    msg.includes('how long') ||
+    msg.includes('onset') ||
+    (msg.includes('start') && (msg.includes('did') || msg.includes('this')))
+  ) {
+    return 'timing'
+  }
+
+  if (
+    msg.includes('tell me more') ||
+    msg.includes("what you're feeling") ||
+    msg.includes('more about what') ||
+    msg.includes('what brings you') ||
+    msg.includes('chief complaint') ||
+    msg.includes("what's wrong") ||
+    (msg.includes('describe') && (msg.includes('symptom') || msg.includes('pain') || msg.includes('feel')))
+  ) {
+    return 'symptom'
+  }
+
+  if (
+    msg.includes('severity') ||
+    msg.includes('scale') ||
+    msg.includes('1-10') ||
+    msg.includes('1 to 10') ||
+    msg.includes('how bad')
+  ) {
+    return 'severity'
+  }
+
+  if (msg.includes('allerg')) return 'allergies'
+  if (msg.includes('family history') || (msg.includes('family') && msg.includes('heart')))
+    return 'family'
+  if (msg.includes('smok') || msg.includes('tobacco')) return 'smoking'
+  if (msg.includes('alcohol') || msg.includes('drink')) return 'alcohol'
+
+  if (
+    msg.includes('feel') ||
+    msg.includes('symptom') ||
+    msg.includes('wrong') ||
+    msg.includes('happening')
+  ) {
+    return 'symptom'
+  }
+
+  return null
+}
+
+function matchResponse(row: ScenarioResponseRow, intent: MockIntentCategory): string | null {
+  const extra: Partial<Record<MockIntentCategory, string | undefined>> = {
+    greeting: row.greeting,
+    severity: row.severity,
+    allergies: row.allergies,
+    family: row.family,
+    smoking: row.smoking,
+    alcohol: row.alcohol,
+  }
+
+  if (intent === 'greeting') {
+    return row.greeting ?? "Hi doctor. I'm not feeling well. Can you help me?"
+  }
+
+  if (intent in extra && extra[intent]) {
+    return extra[intent]!
+  }
+
+  const core = row[intent as keyof ScenarioResponseRow]
+  if (typeof core === 'string' && core.length > 0) {
+    return core
+  }
+
+  return null
+}
 
 export function getMockPatientResponse(
   scenarioId: string,
   messages: Array<{ role: string; content: string }>
 ): string {
-  // Get the last doctor message
-  const lastDoctorMessage = messages
-    .filter(m => m.role === 'doctor' || m.role === 'user')
-    .pop()?.content.toLowerCase() || ''
-
-  // Greeting only — do not use .includes('hi') (matches "this", "which", etc.)
-  if (
-    /\b(hello|hi|hey)\b/.test(lastDoctorMessage) ||
-    lastDoctorMessage.includes('how are you')
-  ) {
-    return "Hi doctor. I'm not feeling well. Can you help me?"
+  if (!scenarioResponses[scenarioId]) {
+    console.error('Invalid scenarioId:', scenarioId)
+    return "I'm not sure how to respond."
   }
 
-  if (lastDoctorMessage.includes('what brings you') || lastDoctorMessage.includes('chief complaint') || lastDoctorMessage.includes('what\'s wrong')) {
-    return "I've been having some chest pain. It started a few hours ago."
+  const lastDoctorMessage = getLastDoctorMessage(messages)
+  if (!lastDoctorMessage.trim()) {
+    return 'Can you clarify what you mean?'
   }
 
-  if (lastDoctorMessage.includes('when did') || lastDoctorMessage.includes('when did this start')) {
-    return "It started about 3 hours ago, around lunchtime. I was just sitting at my desk when it came on."
+  const scenario = scenarioResponses[scenarioId]
+  const intent = detectIntent(lastDoctorMessage)
+
+  if (intent) {
+    const hit = matchResponse(scenario, intent)
+    if (hit) return hit
   }
 
-  if (lastDoctorMessage.includes('where') || lastDoctorMessage.includes('location') || lastDoctorMessage.includes('point')) {
-    return "It's in the center of my chest, kind of pressing. Sometimes it goes to my left arm."
-  }
-
-  if (lastDoctorMessage.includes('severity') || lastDoctorMessage.includes('scale') || lastDoctorMessage.includes('1-10') || lastDoctorMessage.includes('how bad')) {
-    return "I'd say about a 7 out of 10. It's pretty uncomfortable."
-  }
-
-  if (
-    lastDoctorMessage.includes('better') ||
-    lastDoctorMessage.includes('worse') ||
-    lastDoctorMessage.includes('what makes') ||
-    lastDoctorMessage.includes('anything make')
-  ) {
-    return "It gets worse when I take a deep breath. Nothing really makes it better."
-  }
-
-  if (lastDoctorMessage.includes('shortness') || lastDoctorMessage.includes('breath') || lastDoctorMessage.includes('breathing')) {
-    return "Yes, I feel a bit short of breath. I'm breathing faster than usual."
-  }
-
-  if (lastDoctorMessage.includes('nausea') || lastDoctorMessage.includes('sick') || lastDoctorMessage.includes('vomit')) {
-    return "Yes, I feel a little nauseous. I haven't thrown up though."
-  }
-
-  if (lastDoctorMessage.includes('sweat') || lastDoctorMessage.includes('sweating')) {
-    return "Yes, I'm sweating a lot. I feel clammy."
-  }
-
-  if (lastDoctorMessage.includes('medical history') || lastDoctorMessage.includes('conditions') || lastDoctorMessage.includes('diagnoses')) {
-    return "I have high blood pressure and high cholesterol. My doctor put me on medications for those."
-  }
-
-  if (lastDoctorMessage.includes('medication') || lastDoctorMessage.includes('meds') || lastDoctorMessage.includes('prescription')) {
-    return "I take lisinopril for my blood pressure and atorvastatin for cholesterol."
-  }
-
-  if (lastDoctorMessage.includes('allerg') || lastDoctorMessage.includes('allergic')) {
-    return "I'm allergic to penicillin. It gives me a rash."
-  }
-
-  if (lastDoctorMessage.includes('family history') || lastDoctorMessage.includes('family')) {
-    return "My father had a heart attack when he was 55. My mother has diabetes."
-  }
-
-  if (lastDoctorMessage.includes('smok') || lastDoctorMessage.includes('tobacco')) {
-    return "I used to smoke, but I quit about 5 years ago."
-  }
-
-  if (lastDoctorMessage.includes('alcohol') || lastDoctorMessage.includes('drink')) {
-    return "I have a glass of wine with dinner occasionally. Maybe 2-3 times a week."
-  }
-
-  // Default response
-  return "I'm not sure how to describe that. Can you ask me in a different way?"
+  return 'Can you clarify what you mean?'
 }
 
 export function getMockAssessment() {
   return {
-    overallRating: "Good",
-    summary: "You demonstrated solid clinical reasoning throughout this case. You gathered relevant history, performed an appropriate exam, and selected reasonable tests. Your differential diagnosis showed good consideration of multiple possibilities. There are some areas where you could improve, such as exploring more red flags and refining your test selection efficiency.",
+    overallRating: 'Good',
+    summary:
+      'You demonstrated solid clinical reasoning throughout this case. You gathered relevant history, performed an appropriate exam, and selected reasonable tests. Your differential diagnosis showed good consideration of multiple possibilities. There are some areas where you could improve, such as exploring more red flags and refining your test selection efficiency.',
     strengths: [
-      "Thorough history-taking approach",
-      "Appropriate physical exam sections reviewed",
-      "Considered multiple diagnostic possibilities",
-      "Good patient communication"
+      'Thorough history-taking approach',
+      'Appropriate physical exam sections reviewed',
+      'Considered multiple diagnostic possibilities',
+      'Good patient communication',
     ],
     areasForImprovement: [
-      "Could explore more red flag symptoms systematically",
-      "Some tests may have been unnecessary - consider efficiency",
-      "Differential diagnosis could benefit from more specific reasoning notes",
-      "Consider asking about family history earlier in the encounter"
+      'Could explore more red flag symptoms systematically',
+      'Some tests may have been unnecessary - consider efficiency',
+      'Differential diagnosis could benefit from more specific reasoning notes',
+      'Consider asking about family history earlier in the encounter',
     ],
-    diagnosisFeedback: "Your differential diagnosis included relevant possibilities. You correctly identified the most likely diagnosis and ranked your differential appropriately. Consider being more explicit in your reasoning notes to demonstrate your clinical thinking process.",
-    missedKeyHistoryPoints: [
-      "Family history of cardiac disease"
-    ],
-    testSelectionFeedback: "You selected several high-yield tests that are appropriate for this presentation. Some tests may have been ordered as a 'shotgun' approach rather than being targeted. In a real clinical setting, efficiency is important - consider whether each test truly changes your management or adds critical information.",
+    diagnosisFeedback:
+      'Your differential diagnosis included relevant possibilities. You correctly identified the most likely diagnosis and ranked your differential appropriately. Consider being more explicit in your reasoning notes to demonstrate your clinical thinking process.',
+    missedKeyHistoryPoints: ['Family history of cardiac disease'],
+    testSelectionFeedback:
+      "You selected several high-yield tests that are appropriate for this presentation. Some tests may have been ordered as a 'shotgun' approach rather than being targeted. In a real clinical setting, efficiency is important - consider whether each test truly changes your management or adds critical information.",
     sectionRatings: {
-      history: "Good",
-      exam: "Good",
-      tests: "Good",
-      diagnosis: "Good",
-      communication: "Good"
+      history: 'Good',
+      exam: 'Good',
+      tests: 'Good',
+      diagnosis: 'Good',
+      communication: 'Good',
     },
     totalScore: 32,
     totalScorePercentage: 71,
@@ -120,8 +350,8 @@ export function getMockAssessment() {
       exam: 7,
       tests: 10,
       diagnosis: 5,
-      communication: 2
-    }
+      communication: 2,
+    },
   }
 }
 
@@ -131,42 +361,41 @@ export function getMockTermExplanation(
   viewMode: 'simple' | 'clinical' = 'simple'
 ) {
   const term = selectedText.trim().toLowerCase()
-  
-  // Common medical terms with mock explanations
+
   const commonTerms: Record<string, { simple: string; clinical: string; why: string; example: string }> = {
     'chest pain': {
       simple: 'Pain or discomfort felt in the chest area.',
-      clinical: 'Thoracic pain or discomfort; can be cardiac, respiratory, musculoskeletal, or gastrointestinal in origin.',
+      clinical:
+        'Thoracic pain or discomfort; can be cardiac, respiratory, musculoskeletal, or gastrointestinal in origin.',
       why: 'Chest pain can indicate serious conditions like heart attack or less serious issues like muscle strain.',
-      example: 'The patient reported chest pain that started 3 hours ago.'
+      example: 'The patient reported chest pain that started 3 hours ago.',
     },
     'shortness of breath': {
-      simple: 'Feeling like you can\'t get enough air or are breathing hard.',
+      simple: "Feeling like you can't get enough air or are breathing hard.",
       clinical: 'Dyspnea; a subjective sensation of difficult or uncomfortable breathing.',
       why: 'Can be a sign of serious heart or lung conditions.',
-      example: 'The patient complained of shortness of breath when walking up stairs.'
+      example: 'The patient complained of shortness of breath when walking up stairs.',
     },
-    'tachycardia': {
+    tachycardia: {
       simple: 'A faster than normal heart rate.',
       clinical: 'Heart rate above the normal range (typically >100 bpm in adults at rest).',
       why: 'Can indicate stress, fever, dehydration, or heart problems.',
-      example: 'The patient\'s heart rate was tachycardic at 110 bpm.'
+      example: "The patient's heart rate was tachycardic at 110 bpm.",
     },
-    'hypertension': {
+    hypertension: {
       simple: 'High blood pressure.',
       clinical: 'Persistently elevated systemic arterial blood pressure (typically >130/80 mmHg).',
       why: 'Hypertension increases risk of heart disease, stroke, and kidney problems.',
-      example: 'The patient has a history of hypertension managed with medication.'
+      example: 'The patient has a history of hypertension managed with medication.',
     },
-    'dyspnea': {
+    dyspnea: {
       simple: 'Shortness of breath or difficulty breathing.',
       clinical: 'Subjective sensation of difficult or labored breathing.',
       why: 'A common symptom of many cardiac and respiratory conditions.',
-      example: 'The patient presented with acute dyspnea.'
-    }
+      example: 'The patient presented with acute dyspnea.',
+    },
   }
 
-  // Check for exact match
   if (commonTerms[term]) {
     const def = commonTerms[term]
     return {
@@ -174,7 +403,7 @@ export function getMockTermExplanation(
       definitionSimple: def.simple,
       definitionClinical: def.clinical,
       whyItMatters: def.why,
-      whyItMattersHere: contextText 
+      whyItMattersHere: contextText
         ? `In this case, ${term} is an important finding that helps the doctor understand the patient's condition.`
         : def.why,
       example: def.example,
@@ -182,16 +411,16 @@ export function getMockTermExplanation(
         ? `${selectedText.trim()} appears in the patient's presentation: ${contextText.substring(0, 80)}...`
         : def.example,
       synonymsOrRelated: [],
-      source: 'local' as const
+      source: 'local' as const,
     }
   }
 
-  // Generic response
   return {
     term: selectedText.trim(),
     definitionSimple: `"${selectedText.trim()}" is a medical term. In this context, it refers to a clinical finding or condition.`,
     definitionClinical: `"${selectedText.trim()}" is a medical term used in clinical practice. Specific definitions may vary based on context.`,
-    whyItMatters: 'Understanding medical terminology is important for effective communication in healthcare.',
+    whyItMatters:
+      'Understanding medical terminology is important for effective communication in healthcare.',
     whyItMattersHere: contextText
       ? `In this case, "${selectedText.trim()}" is relevant to understanding the patient's presentation.`
       : 'Understanding medical terminology is important for effective communication in healthcare.',
@@ -200,8 +429,6 @@ export function getMockTermExplanation(
       ? `In this case: "${selectedText.trim()}" - ${contextText.substring(0, 100)}...`
       : `Example: The term "${selectedText.trim()}" is used in medical contexts.`,
     synonymsOrRelated: [],
-    source: 'ai' as const
+    source: 'ai' as const,
   }
 }
-
-
