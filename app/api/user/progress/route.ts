@@ -28,6 +28,7 @@ export async function GET() {
         scenarioId: id,
         status: sum.displayStatus,
         bestScore: sum.bestScore,
+        lastAttemptScore: sum.lastAttemptScore,
       }
     })
 

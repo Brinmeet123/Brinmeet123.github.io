@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { scenarios } from '@/data/scenarios'
 import { evaluatePerformance } from '@/lib/scoring'
+import { sumBestScoresPerScenarioFromAttempts } from '@/lib/scenarioMastery'
 import { z } from 'zod'
 
 const bodySchema = z.object({
@@ -108,8 +109,10 @@ export async function POST(req: Request) {
         },
       })
 
+      const newTotalScore = await sumBestScoresPerScenarioFromAttempts(userId, tx)
+
       const userUpdate: Prisma.UserUpdateInput = {
-        totalScore: { increment: evalResult.score },
+        totalScore: newTotalScore,
       }
       if (priorCompletedCount === 0) {
         userUpdate.streak = { increment: 1 }

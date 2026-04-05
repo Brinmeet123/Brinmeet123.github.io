@@ -5,7 +5,10 @@ import { getScenarioSummariesForUser } from '@/lib/scenarioMastery'
 
 export default async function ScenariosPage() {
   const session = await auth()
-  let progressByScenario: Record<string, { status: string; bestScore: number | null }> = {}
+  let progressByScenario: Record<
+    string,
+    { status: string; bestScore: number | null; lastAttemptScore: number | null }
+  > = {}
   if (session?.user?.id) {
     const summaries = await getScenarioSummariesForUser(
       session.user.id,
@@ -14,7 +17,14 @@ export default async function ScenariosPage() {
     progressByScenario = Object.fromEntries(
       scenarios.map((s) => {
         const sum = summaries.get(s.id)!
-        return [s.id, { status: sum.displayStatus, bestScore: sum.bestScore }]
+        return [
+          s.id,
+          {
+            status: sum.displayStatus,
+            bestScore: sum.bestScore,
+            lastAttemptScore: sum.lastAttemptScore,
+          },
+        ]
       })
     )
   }

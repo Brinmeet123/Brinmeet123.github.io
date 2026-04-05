@@ -45,13 +45,23 @@ function includesPhrase(text: string, phrase: string): boolean {
   return normalize(text).includes(normalize(phrase))
 }
 
+/**
+ * Scores how well a doctor question matches a preset Q&A row.
+ * Priority: exact pattern match (full question) > substring phrase match (longer patterns score higher) > keyword hits.
+ */
 function scoreQuestion(question: string, qa: FallbackQA): number {
   const normalized = normalize(question)
   let score = 0
 
   for (const pattern of qa.patterns || []) {
+    const np = normalize(pattern)
+    if (!np) continue
+    if (normalized === np) {
+      score += 100
+      continue
+    }
     if (includesPhrase(normalized, pattern)) {
-      score += 12
+      score += 12 + Math.min(Math.floor(np.length / 4), 18)
     }
   }
 
@@ -128,7 +138,6 @@ export function getPresetPatientResponse(
     }
   }
 
-  // Threshold to avoid bad matches (lowered slightly so keyword-only matches still count)
   if (!bestQA || bestScore < 5) {
     return bucket.defaultAnswer
   }
@@ -142,24 +151,27 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
     titleMatchers: ['chest pain in the er', 'chest pain'],
     complaintMatchers: ['chest pain', 'walking up stairs'],
     defaultAnswer:
-      "I'm having really bad chest pain in the middle of my chest. It started when I was walking upstairs, and I feel short of breath and sweaty.",
+      "I'm really scared — I've got this awful pressure in the middle of my chest that started when I was walking upstairs about half an hour ago. I'm sweaty, nauseous, and I can't catch my breath right. I've never had anything like this.",
     qa: [
       {
         id: 'feeling-open',
         answer:
-          "I get this heavy, crushing feeling right in the middle of my chest, and it spreads into my left arm and jaw. I'm sweaty, short of breath, and nauseous — it started when I was walking upstairs about half an hour ago.",
+          "I'm honestly pretty frightened. There's this heavy, squeezing feeling right in the center of my chest, kind of behind my breastbone, and it's spreading into my left arm and up toward my jaw. I'm drenched in sweat, I feel sick to my stomach, and I can't get a good breath. It all started when I was walking up the stairs at work — maybe 30 minutes ago — and it hasn't let up.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
           'tell me more about what you re feeling',
+          'tell me more about your symptoms',
+          'tell me more about your symptom',
         ],
-        keywords: ['feeling', 'more', 'tell'],
+        keywords: ['feeling', 'more', 'tell', 'symptoms', 'symptom'],
       },
       {
         id: 'chief-complaint',
         answer:
-          "I started having really bad chest pain while walking up the stairs about 30 minutes ago.",
+          "What brought me in is this crushing chest thing that hit me while I was walking upstairs. I work construction — I'm used to being winded, but this isn't normal. I'm also sweaty and nauseous, and my left arm feels weird.",
         patterns: [
+          'what brought you in today',
           'what brought you in',
           'what brings you in',
           'what happened',
@@ -167,104 +179,109 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
           'why are you here',
           'tell me what is going on',
         ],
-        keywords: ['problem', 'today', 'here', 'complaint'],
+        keywords: ['problem', 'today', 'here', 'complaint', 'brought'],
+      },
+      {
+        id: 'quality',
+        answer:
+          "It's not a little pinch — it's a deep, heavy pressure, like someone's standing on my chest. Kind of crushing. I wouldn't call it stabbing; it's more squeezing, and it feels really wrong.",
+        patterns: [
+          'what does it feel like',
+          'what kind of pain is it',
+          'can you describe it more',
+          'describe it more',
+          'describe the pain',
+          'is it sharp dull pressure burning',
+        ],
+        keywords: ['feel', 'describe', 'kind', 'pain', 'like'],
       },
       {
         id: 'onset',
         answer:
-          "It started about 30 minutes ago while I was walking upstairs.",
+          "It started about 30 minutes ago while I was walking up the stairs — not sprinting, just normal steps. I had to stop and lean on the railing. Before that I felt fine.",
         patterns: [
           'when did this start',
           'when did it start',
           'how long has this been going on',
+          'how long has it been going on',
           'what were you doing when it started',
         ],
-        keywords: ['when', 'start', 'started', 'onset', 'doing'],
+        keywords: ['when', 'start', 'started', 'onset', 'doing', 'long'],
       },
       {
         id: 'trajectory',
         answer:
-          "If anything it's gotten worse since it started — I don't feel like I'm turning the corner.",
+          "If anything it's gotten worse — or at least it hasn't gotten better. I'm not someone who runs to the ER, but this feels like it's ramping up, not fading.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
           'better or worse',
+          'has the pain changed over time',
+          'pain changed over time',
         ],
-        keywords: ['better', 'worse'],
+        keywords: ['better', 'worse', 'changed', 'time'],
       },
       {
         id: 'location',
-        answer: "It's right in the center of my chest.",
+        answer:
+          "It's mostly right in the center of my chest, kind of behind my breastbone. It feels deep — not like a skin thing or a pulled muscle on the side. That's where the worst of it is.",
         patterns: [
           'where exactly do you feel it',
           'where is the pain',
           'where does it hurt',
           'where is it located',
           'show me where it hurts',
+          'can you point to where it hurts',
+          'point to where it hurts',
         ],
-        keywords: ['where', 'location', 'located', 'hurt'],
-      },
-      {
-        id: 'quality',
-        answer:
-          "It feels heavy and crushing, like a lot of pressure on my chest.",
-        patterns: [
-          'what does it feel like',
-          'describe the pain',
-          'is it sharp dull pressure burning',
-        ],
-        keywords: ['feel', 'pressure', 'crushing', 'heavy', 'pain'],
+        keywords: ['where', 'location', 'located', 'hurt', 'point'],
       },
       {
         id: 'radiation',
-        answer: "Yeah, it goes into my left arm and up into my jaw.",
+        answer:
+          "Yeah — it goes into my left arm, kind of heavy and achy, and I also feel it up along my jaw on the left. It's not just one tiny dot; it spreads.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
           'does it radiate',
+          'does the pain radiate',
           'go anywhere else',
           'move anywhere',
         ],
-        keywords: ['radiate', 'travel', 'arm', 'jaw'],
+        keywords: ['radiate', 'travel', 'arm', 'jaw', 'else'],
       },
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "Yes — I'm short of breath, I feel nauseous, and I've been sweating buckets.",
+          "Yes to all of that — I'm short of breath even when I try to slow my breathing down, I feel nauseous like I might throw up, and I've been sweating through my shirt. Clammy, cold sweat.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
           'shortness of breath nausea sweating',
+          'any other symptoms',
+          'other symptoms',
         ],
-        keywords: ['shortness', 'breath', 'nausea', 'sweating'],
-      },
-      {
-        id: 'severity',
-        answer: "It's about a 9 out of 10.",
-        patterns: [
-          'how bad is it',
-          'rate the pain',
-          'pain scale',
-          'from 1 to 10',
-        ],
-        keywords: ['bad', 'severe', 'scale', '10'],
+        keywords: ['shortness', 'breath', 'nausea', 'sweating', 'symptoms'],
       },
       {
         id: 'worse',
         answer:
-          "Walking upstairs brought it on, and trying to push through makes it feel worse. I haven't found anything that really helps besides stopping to rest.",
+          "Walking and any exertion make it worse — that's how it started. Even talking too much right now winds me. Nothing has really made it go away; sitting and trying to calm down helps a tiny bit, but not much.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
           'anything make it worse',
           'does movement make it worse',
           'worse with activity',
+          'what makes it better or worse',
+          'better or worse',
         ],
-        keywords: ['worse', 'activity', 'exertion', 'movement'],
+        keywords: ['worse', 'activity', 'exertion', 'movement', 'better'],
       },
       {
         id: 'better',
-        answer: "Nothing has really made it better so far.",
+        answer:
+          "Not really — I stopped and sat down, but the pressure is still there. I haven't taken anything that helped.",
         patterns: [
           'what makes it better',
           'anything help',
@@ -275,8 +292,48 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
         keywords: ['better', 'relieve', 'help', 'rest'],
       },
       {
+        id: 'past-medical',
+        answer:
+          "I've got high blood pressure and my cholesterol runs high — my doctor's been on me about diet and meds for years. No diabetes that I know of. This isn't from a fall or anything; I didn't injure my chest.",
+        patterns: [
+          'do you have any medical conditions',
+          'any past medical history',
+          'past medical history',
+          'medical problems',
+          'any conditions',
+          'do you have any health problems',
+        ],
+        keywords: ['medical', 'history', 'conditions', 'problems', 'past'],
+      },
+      {
+        id: 'medications',
+        answer:
+          "I'm supposed to take something for blood pressure and a statin for cholesterol — honestly I miss doses more than I should, especially when work gets busy. I don't take a bunch of other pills regularly.",
+        patterns: [
+          'do you take any medications',
+          'what meds do you take',
+          'what medicines do you take',
+          'what medications are you on',
+          'do you take anything',
+        ],
+        keywords: ['medications', 'medicines', 'meds', 'take'],
+      },
+      {
+        id: 'severity',
+        answer:
+          "On a scale of 1 to 10, it's up there — like a 9. I've had aches before; this is different. I've never had chest pain this bad before.",
+        patterns: [
+          'how bad is it',
+          'rate the pain',
+          'pain scale',
+          'from 1 to 10',
+        ],
+        keywords: ['bad', 'severe', 'scale', '10'],
+      },
+      {
         id: 'shortness-breath',
-        answer: "Yes, I do feel short of breath.",
+        answer:
+          "Yeah — I feel like I can't get enough air. I'm not gasping like I ran a marathon, but I'm winded and tight.",
         patterns: [
           'do you have shortness of breath',
           'are you short of breath',
@@ -286,56 +343,35 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       },
       {
         id: 'nausea',
-        answer: "Yes, I feel nauseous.",
+        answer:
+          "I feel queasy — like I could vomit. Haven't thrown up yet, but my stomach is upset.",
         patterns: ['are you nauseous', 'do you feel sick', 'nausea'],
         keywords: ['nausea', 'nauseous', 'sick'],
       },
       {
         id: 'sweating',
-        answer: "Yeah, I've been sweating a lot.",
+        answer:
+          "I'm sweating a lot — cold, clammy sweat. My shirt's damp. That's not normal for me.",
         patterns: ['are you sweating', 'did you get sweaty', 'diaphoresis'],
         keywords: ['sweat', 'sweating', 'diaphoresis'],
       },
       {
         id: 'fever',
-        answer: "No, I don't have a fever and I haven't been sick recently.",
+        answer:
+          "I don't think I have a fever — I haven't felt hot and cold like with the flu. No real cough either.",
         patterns: ['do you have fever', 'any fever', 'recent illness', 'any cough'],
         keywords: ['fever', 'cough', 'sick', 'illness'],
       },
       {
-        id: 'past-medical',
-        answer:
-          "I have high blood pressure and high cholesterol — my doctor talks about cardiac risk a lot.",
-        patterns: [
-          'do you have any medical conditions',
-          'medical problems',
-          'past medical history',
-          'any conditions',
-          'do you have any health problems',
-        ],
-        keywords: ['medical', 'history', 'conditions', 'problems'],
-      },
-      {
-        id: 'medications',
-        answer:
-          "I take a statin for cholesterol and a pill for blood pressure — I think it's a thiazide — but honestly I miss doses sometimes.",
-        patterns: [
-          'do you take any medications',
-          'what medicines do you take',
-          'what medications are you on',
-          'do you take anything',
-        ],
-        keywords: ['medications', 'medicines', 'take'],
-      },
-      {
         id: 'allergies',
-        answer: "I don't have any known drug allergies.",
+        answer: "Not that I know of — no bad reactions to medicines that I remember.",
         patterns: ['any allergies', 'allergic to anything', 'drug allergies'],
         keywords: ['allergies', 'allergic'],
       },
       {
         id: 'smoking',
-        answer: "Yes. I smoke about a pack a day.",
+        answer:
+          "Yeah, I smoke — about a pack a day. I know I shouldn't, especially with my pressure and cholesterol.",
         patterns: [
           'do you smoke',
           'smoking history',
@@ -347,7 +383,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'family-history',
         answer:
-          "My father had a heart attack in his early 60s.",
+          "Heart stuff runs in my family — my dad had a heart attack in his early 60s. That's part of why I'm so worried right now.",
         patterns: [
           'family history',
           'anyone in your family have heart disease',
@@ -357,7 +393,8 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       },
       {
         id: 'before',
-        answer: "I've never had chest pain this bad before.",
+        answer:
+          "Never like this. I've had sore muscles and heartburn before — this feels different. Scarier.",
         patterns: [
           'have you had this before',
           'has this happened before',
@@ -367,7 +404,8 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       },
       {
         id: 'trauma',
-        answer: "No, I didn't injure myself or have any trauma.",
+        answer:
+          "No — I didn't fall, get hit in the chest, or anything like that. It just started with the stairs.",
         patterns: ['any trauma', 'did you fall', 'injury', 'hurt yourself'],
         keywords: ['trauma', 'injury', 'fall'],
       },
@@ -385,81 +423,163 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       'worst headache of my life',
     ],
     defaultAnswer:
-      "I have a really severe headache that started suddenly, and my neck hurts too. Bright lights make it worse.",
+      "This headache came out of nowhere an hour ago — worst pain I've ever had. My neck is stiff, light kills me, and I feel sick and feverish. I'm terrified.",
     qa: [
       {
         id: 'feeling-open',
         answer:
-          "My head is pounding all over — it's the worst headache of my life — and my neck is stiff and hurts. Bright light makes it worse, I've been nauseous, and I've had fever and chills.",
+          "I'm completely miserable. About an hour ago I got this sudden, explosive headache all over my head — the worst I've ever had. My neck is stiff and hurts to move, bright lights make me want to scream, and I've been nauseous with fever and chills. I feel weak and shaky. I was just resting when it hit — no injury, nothing.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
           'tell me more about what you re feeling',
+          'tell me more about your symptoms',
+          'tell me more about your symptom',
         ],
-        keywords: ['feeling', 'more', 'tell'],
+        keywords: ['feeling', 'more', 'tell', 'symptoms', 'symptom'],
       },
       {
         id: 'chief-complaint',
         answer:
-          "I got a really bad headache all of a sudden about an hour ago, and my neck hurts too.",
+          "What brought me in is this sudden, brutal headache — like a switch flipped. My neck is stiff, I can't stand bright light, and I've been running hot and cold. I need help — I've never felt anything close to this.",
         patterns: [
+          'what brought you in today',
           'what brought you in',
           'what seems to be the problem',
           'why are you here',
           'what happened',
         ],
-        keywords: ['problem', 'headache', 'today'],
+        keywords: ['problem', 'headache', 'today', 'brought'],
+      },
+      {
+        id: 'quality',
+        answer:
+          "It's a violent pounding, throbbing pain — my whole head feels like it's going to burst. Not like a little tension headache; it's 10 out of 10 and constant.",
+        patterns: [
+          'what does it feel like',
+          'what kind of pain is it',
+          'can you describe it more',
+          'describe it more',
+          'describe the headache',
+        ],
+        keywords: ['feel', 'describe', 'pounding', 'kind', 'pain'],
       },
       {
         id: 'onset',
-        answer: "It started suddenly about an hour ago.",
+        answer:
+          "It started suddenly about an hour ago — I can pretty much tell you the minute it began. Max pain almost right away. I wasn't doing anything strenuous.",
         patterns: [
-          'when did it start',
           'when did this start',
+          'when did it start',
           'how long has it been going on',
+          'how long has this been going on',
           'was it sudden',
         ],
-        keywords: ['when', 'start', 'sudden', 'hour'],
+        keywords: ['when', 'start', 'sudden', 'hour', 'long'],
       },
       {
         id: 'trajectory',
         answer:
-          "It's not improving — if anything it's ramping up. This is nothing like my usual headaches.",
+          "It's not getting better — if anything I'm more light-sensitive and my neck feels tighter. This isn't fading like a normal headache.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
           'better or worse',
+          'has the pain changed over time',
+          'pain changed over time',
         ],
-        keywords: ['better', 'worse'],
+        keywords: ['better', 'worse', 'changed', 'time'],
       },
       {
         id: 'location',
         answer:
-          "The headache feels like it's all over my head, not just one spot.",
+          "It's all over — I can't point to one little spot. Front, sides, top — everywhere. The neck stiffness makes it feel connected up and down my spine.",
         patterns: [
           'where exactly do you feel it',
           'where is the pain',
           'where is the headache',
           'what part of your head hurts',
+          'can you point to where it hurts',
+          'point to where it hurts',
         ],
-        keywords: ['where', 'head', 'location'],
+        keywords: ['where', 'head', 'location', 'point'],
+      },
+      {
+        id: 'radiation',
+        answer:
+          "It doesn't really travel like pain shooting down an arm or leg — it's more my whole head and my neck. The neck stiffness is the worst besides the headache itself.",
+        patterns: [
+          'does it go anywhere else',
+          'does the pain travel',
+          'does it radiate',
+          'does the pain radiate',
+          'go anywhere else',
+          'move anywhere',
+        ],
+        keywords: ['radiate', 'travel', 'move', 'else'],
+      },
+      {
+        id: 'associated-sob-nausea-sweat',
+        answer:
+          "I'm not really short of breath. I am nauseous — haven't vomited yet but I feel like I could. I've had sweats and chills with feeling feverish.",
+        patterns: [
+          'any shortness of breath nausea or sweating',
+          'shortness of breath nausea or sweating',
+          'shortness of breath nausea sweating',
+          'any other symptoms',
+          'other symptoms',
+        ],
+        keywords: ['shortness', 'breath', 'nausea', 'sweating', 'symptoms'],
+      },
+      {
+        id: 'worse',
+        answer:
+          "Bright lights and noise make it unbearable. Moving my neck makes it worse. Lying still in a dark, quiet room helps a little — not a cure, but a little.",
+        patterns: [
+          'does anything make it worse',
+          'what makes it worse',
+          'anything make it worse',
+          'worse with activity',
+          'what makes it better or worse',
+        ],
+        keywords: ['worse', 'better', 'anything'],
+      },
+      {
+        id: 'past-medical',
+        answer:
+          "I've been healthy overall — no high blood pressure that I know of, no diabetes. I don't have a long list of medical problems. This headache is new and terrifying.",
+        patterns: [
+          'do you have any medical conditions',
+          'any past medical history',
+          'past medical history',
+          'medical problems',
+          'any conditions',
+        ],
+        keywords: ['medical', 'conditions', 'history', 'past'],
+      },
+      {
+        id: 'medications',
+        answer:
+          "I don't take daily prescriptions — maybe ibuprofen here and there for period cramps, but nothing regular. I haven't taken anything that's touched this pain.",
+        patterns: [
+          'do you take any medications',
+          'what meds do you take',
+          'what medicines do you take',
+          'what medications are you on',
+        ],
+        keywords: ['medications', 'medicines', 'meds', 'take'],
       },
       {
         id: 'severity',
-        answer: "It's a 10 out of 10. It's the worst headache I've had.",
+        answer:
+          "Ten out of ten — and I mean it. This is the worst headache of my life. I'm not being dramatic.",
         patterns: ['how bad is it', 'pain scale', 'from 1 to 10', 'rate it'],
         keywords: ['bad', 'scale', '10', 'worst'],
       },
       {
-        id: 'quality',
-        answer:
-          "It's a severe pounding, throbbing pain — like my head is going to explode.",
-        patterns: ['what does it feel like', 'describe the headache'],
-        keywords: ['feel', 'describe', 'pounding'],
-      },
-      {
         id: 'neck',
-        answer: "Yes, my neck is really stiff and painful.",
+        answer:
+          "Yes — my neck is stiff and painful. It hurts to bend it forward. That scares me as much as the headache.",
         patterns: [
           'does your neck hurt',
           'neck pain',
@@ -469,50 +589,9 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
         keywords: ['neck', 'stiff', 'stiffness'],
       },
       {
-        id: 'radiation',
-        answer:
-          "It's mostly all over my head and neck. It doesn't really feel like it's going down my arm like a heart thing — it's my head and neck.",
-        patterns: [
-          'does it go anywhere else',
-          'does the pain travel',
-          'does it radiate',
-          'go anywhere else',
-          'move anywhere',
-          'does the pain move',
-          'pain move',
-        ],
-        keywords: ['radiate', 'travel', 'move', 'else', 'arm'],
-      },
-      {
-        id: 'associated-sob-nausea-sweat',
-        answer:
-          "I'm not really short of breath. I do feel nauseous, and I've had sweats and chills with the fever.",
-        patterns: [
-          'any shortness of breath nausea or sweating',
-          'shortness of breath nausea or sweating',
-          'shortness of breath nausea sweating',
-        ],
-        keywords: ['shortness', 'breath', 'nausea', 'sweating'],
-      },
-      {
-        id: 'worse',
-        answer:
-          "Bright lights and moving my head make it worse. Lying still in a dark room helps a little.",
-        patterns: [
-          'does anything make it worse',
-          'what makes it worse',
-          'anything make it worse',
-          'worse with activity',
-          'anything make it better',
-          'what makes it better',
-          'does anything help',
-          'anything relieve',
-        ],
-        keywords: ['worse', 'better', 'anything'],
-      },
-      {
         id: 'photophobia',
-        answer: "Yes, bright lights make it worse.",
+        answer:
+          "Even the lights in here feel like knives. I need it dark.",
         patterns: [
           'does light bother you',
           'bright lights make it worse',
@@ -522,31 +601,36 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       },
       {
         id: 'fever',
-        answer: "Yes, I've had fever and chills.",
+        answer:
+          "I've felt feverish — hot and then chills. I haven't taken my temperature at home carefully, but I feel sick all over.",
         patterns: ['do you have fever', 'any fever', 'chills'],
         keywords: ['fever', 'chills'],
       },
       {
         id: 'nausea',
-        answer: "Yes, I feel nauseous.",
+        answer:
+          "Yes — I'm nauseous. I haven't thrown up yet but I'm close.",
         patterns: ['nausea', 'are you nauseous', 'have you vomited'],
         keywords: ['nausea', 'nauseous', 'vomit'],
       },
       {
         id: 'weak',
-        answer: "I feel really tired and weak.",
+        answer:
+          "I feel wiped out — weak, shaky, like I can barely sit up. It's not just the pain; my whole body feels wrong.",
         patterns: ['are you weak', 'fatigue', 'tired'],
         keywords: ['weak', 'tired', 'fatigue'],
       },
       {
         id: 'injury',
-        answer: "No, I haven't hit my head or had any recent injury.",
+        answer:
+          "No — I didn't hit my head, fall, or anything. I was resting when this started.",
         patterns: ['head injury', 'trauma', 'did you fall', 'hit your head'],
         keywords: ['injury', 'trauma', 'head'],
       },
       {
         id: 'before',
-        answer: "No, I've never had a headache like this before.",
+        answer:
+          "Never — I get the occasional mild headache, but nothing like this. No migraines that I know of.",
         patterns: [
           'have you had this before',
           'similar headache before',
@@ -556,49 +640,28 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       },
       {
         id: 'seizure',
-        answer: "No, I don't have any history of seizures.",
+        answer: "No seizure history — I've never had one.",
         patterns: ['history of seizures', 'any seizure history'],
         keywords: ['seizure', 'seizures'],
       },
       {
         id: 'allergies',
-        answer: "I don't have any known medication allergies.",
+        answer:
+          "No known drug allergies that I'm aware of.",
         patterns: ['any allergies', 'drug allergies', 'allergic to anything'],
         keywords: ['allergies', 'allergic'],
       },
       {
-        id: 'past-medical',
-        answer:
-          "I'm generally healthy — no diabetes, no high blood pressure that I know of. I don't see a doctor often.",
-        patterns: [
-          'do you have any medical conditions',
-          'past medical history',
-          'medical problems',
-          'any conditions',
-        ],
-        keywords: ['medical', 'conditions', 'history'],
-      },
-      {
-        id: 'medications',
-        answer:
-          "I don't take any daily prescriptions — just ibuprofen sometimes for cramps.",
-        patterns: [
-          'do you take any medications',
-          'what medicines do you take',
-          'what medications are you on',
-        ],
-        keywords: ['medications', 'medicines', 'take'],
-      },
-      {
         id: 'social',
-        answer: "I'm a college student and I live in a dorm.",
+        answer:
+          "I share an apartment with a roommate — we both work, so I'm around people at the office too. Nothing weird travel-wise lately, just normal life.",
         patterns: [
           'do you live with anyone',
           'where do you live',
           'social history',
           'living situation',
         ],
-        keywords: ['college', 'dorm', 'live'],
+        keywords: ['live', 'roommate', 'apartment', 'work'],
       },
     ],
   },
@@ -608,89 +671,96 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
     titleMatchers: ['acute shortness of breath', 'shortness of breath'],
     complaintMatchers: ['sudden onset shortness of breath', 'trouble breathing'],
     defaultAnswer:
-      "I suddenly got really short of breath. It came on pretty quickly and it's hard to catch my breath.",
+      "I can't breathe right — it came on fast today. My chest feels tight, I'm winded even sitting, and I'm scared. I flew recently and one leg's been feeling off.",
     qa: [
       {
         id: 'feeling-open',
         answer:
-          "I can't catch my breath — it hit me out of nowhere today. My chest feels tight and I'm winded even sitting still. One leg has felt a bit swollen lately, and I was on a long trip recently where I was sitting for hours.",
+          "I'm really struggling — I suddenly couldn't catch my breath today. It feels like there's a tight band around my chest and I can't get a full breath in, like I'm smothering. I'm a little clammy. I had a long flight not long ago and I've been sitting a lot, and now that you ask, one calf has felt heavier than the other. I'm on blood pressure and cholesterol meds from my doctor.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
           'tell me more about what you re feeling',
+          'tell me more about your symptoms',
+          'tell me more about your symptom',
         ],
-        keywords: ['feeling', 'more', 'tell'],
+        keywords: ['feeling', 'more', 'tell', 'symptoms', 'symptom'],
       },
       {
         id: 'chief-complaint',
         answer:
-          "I suddenly became very short of breath, and it came on pretty quickly.",
+          "What brought me in is I can't breathe like normal — it hit suddenly and I'm not getting better. I feel tight in the chest and I'm anxious because I can't get air.",
         patterns: [
+          'what brought you in today',
           'what brought you in',
           'what seems to be the problem',
           'what happened',
           'why are you here',
         ],
-        keywords: ['problem', 'breathing', 'shortness'],
-      },
-      {
-        id: 'onset',
-        answer: "It started suddenly today.",
-        patterns: [
-          'when did it start',
-          'when did this start',
-          'how long has it been going on',
-          'did it start suddenly',
-        ],
-        keywords: ['when', 'start', 'suddenly'],
-      },
-      {
-        id: 'trajectory',
-        answer:
-          "I'd say it's been steady or a little worse — I haven't bounced back to normal.",
-        patterns: [
-          'has it been getting better or worse',
-          'getting better or worse',
-          'better or worse',
-        ],
-        keywords: ['better', 'worse'],
+        keywords: ['problem', 'breathing', 'shortness', 'brought'],
       },
       {
         id: 'quality',
         answer:
-          "It feels like I can't get a full breath — tight and air-hungry, not really sharp pain.",
+          "It's not really a sharp stabbing pain — it's air hunger. I feel like I'm working hard to breathe and I can't finish a breath. There's a dull ache or tightness in my chest when I try to take a deep breath.",
         patterns: [
           'what does it feel like',
+          'what kind of pain is it',
+          'can you describe it more',
+          'describe it more',
           'describe what you re feeling',
           'describe the breathing',
         ],
-        keywords: ['feel', 'describe', 'like'],
+        keywords: ['feel', 'describe', 'like', 'kind', 'pain'],
       },
       {
-        id: 'severity',
-        answer: "It's pretty bad. I'm really struggling to catch my breath.",
-        patterns: ['how bad is it', 'severity', 'from 1 to 10'],
-        keywords: ['bad', 'severe', 'breath'],
+        id: 'onset',
+        answer:
+          "It started suddenly today — I can't pin it to one exact minute, but it came on fast, not over weeks. I've been getting worse since it started.",
+        patterns: [
+          'when did this start',
+          'when did it start',
+          'how long has it been going on',
+          'how long has this been going on',
+          'did it start suddenly',
+        ],
+        keywords: ['when', 'start', 'suddenly', 'long'],
+      },
+      {
+        id: 'trajectory',
+        answer:
+          "I haven't turned the corner — it's been pretty steady bad, maybe a little worse the more I move. I'm not back to baseline at all.",
+        patterns: [
+          'has it been getting better or worse',
+          'getting better or worse',
+          'better or worse',
+          'has the pain changed over time',
+          'pain changed over time',
+        ],
+        keywords: ['better', 'worse', 'changed', 'time'],
       },
       {
         id: 'location',
         answer:
-          "It's mostly a tight, can't-breathe feeling in my chest — like I can't fill my lungs all the way.",
+          "It's not really one spot of pain like a bee sting — it's more my whole chest feels tight and I can't expand my lungs all the way. Like I'm breathing through a straw.",
         patterns: [
           'where exactly do you feel it',
           'where do you feel it',
           'where is the discomfort',
+          'can you point to where it hurts',
+          'point to where it hurts',
         ],
-        keywords: ['where', 'feel', 'chest'],
+        keywords: ['where', 'feel', 'chest', 'point'],
       },
       {
         id: 'radiation',
         answer:
-          "The breathing trouble is mostly in my chest. I don't have pain shooting down my arm — but one calf has felt off and a bit swollen.",
+          "The breathing problem doesn't shoot down my arm like you hear about with a heart attack — it's centered in my chest and my breathing. My leg bothering me is separate — one calf feels tight or swollen.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
           'does it radiate',
+          'does the pain radiate',
           'go anywhere else',
         ],
         keywords: ['anywhere', 'else', 'radiate', 'travel'],
@@ -698,59 +768,101 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "I'm definitely short of breath — that's the main thing. I'm not nauseous, but I've felt a little clammy.",
+          "The main thing is I'm short of breath — that's why I'm here. I'm not really nauseous. I have felt clammy and a little sweaty, like when you're panicking.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
           'shortness of breath nausea sweating',
+          'any other symptoms',
+          'other symptoms',
         ],
-        keywords: ['shortness', 'breath', 'nausea', 'sweating'],
-      },
-      {
-        id: 'chest-pain',
-        answer: "I don't really have crushing chest pain. It's mainly the breathing that's bothering me.",
-        patterns: ['any chest pain', 'does your chest hurt'],
-        keywords: ['chest', 'pain'],
+        keywords: ['shortness', 'breath', 'nausea', 'sweating', 'symptoms'],
       },
       {
         id: 'worse',
         answer:
-          "Yes — walking and even talking make me more winded. Resting helps a little but I'm still short of breath.",
+          "Walking across the room, going to the bathroom — anything that gets my heart rate up makes the breathing feel worse. Sitting still is a little easier but I'm still not right.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
           'worse with walking',
           'worse with activity',
+          'what makes it better or worse',
         ],
-        keywords: ['worse', 'walking', 'activity', 'movement'],
+        keywords: ['worse', 'walking', 'activity', 'movement', 'better'],
       },
       {
         id: 'better',
-        answer: "Sitting still helps a little, but I'm still short of breath.",
+        answer:
+          "Sitting and trying to slow my breathing down helps a tiny bit, but I'm still short of breath. I wouldn't say I'm comfortable.",
         patterns: ['what makes it better', 'anything help', 'rest help'],
         keywords: ['better', 'help', 'rest'],
       },
       {
+        id: 'medical-history',
+        answer:
+          "I have high blood pressure and my cholesterol is treated — no diagnosed asthma or COPD that I know of. I'm 60 — I don't run marathons but I'm not usually this winded.",
+        patterns: [
+          'do you have any medical conditions',
+          'any past medical history',
+          'past medical history',
+          'medical problems',
+          'health conditions',
+        ],
+        keywords: ['medical', 'history', 'conditions', 'past'],
+      },
+      {
+        id: 'medications',
+        answer:
+          "I take lisinopril for blood pressure and atorvastatin for cholesterol — every day, usually. That's the main stuff.",
+        patterns: [
+          'do you take any medications',
+          'what meds do you take',
+          'medications',
+          'medicines',
+          'what do you take',
+        ],
+        keywords: ['medications', 'medicines', 'meds', 'take'],
+      },
+      {
+        id: 'chest-pain',
+        answer:
+          "I wouldn't describe it as classic crushing chest pain — it's more tight and hurts when I breathe in deep. The breathing is what's scaring me most.",
+        patterns: ['any chest pain', 'does your chest hurt', 'pleuritic'],
+        keywords: ['chest', 'pain'],
+      },
+      {
+        id: 'severity',
+        answer:
+          "Bad — I feel like I might pass out if I push myself. I'm not fine. Maybe an 8 out of 10 for how scary it feels.",
+        patterns: ['how bad is it', 'severity', 'from 1 to 10'],
+        keywords: ['bad', 'severe', 'breath'],
+      },
+      {
         id: 'cough',
-        answer: "I don't have much of a cough.",
+        answer:
+          "Not really — maybe a little dry cough trying to catch my breath, but nothing like bronchitis.",
         patterns: ['do you have a cough', 'coughing'],
         keywords: ['cough'],
       },
       {
         id: 'fever',
-        answer: "No, I haven't had a fever.",
+        answer:
+          "I haven't felt really feverish — no big chills. Maybe a little warm but not like the flu.",
         patterns: ['fever', 'any fever', 'recent illness'],
         keywords: ['fever', 'illness'],
       },
       {
         id: 'wheezing',
-        answer: "I don't really notice wheezing. I just feel very short of breath.",
+        answer:
+          "I don't hear wheezing like an asthma attack — it's more I can't get air in.",
         patterns: ['are you wheezing', 'wheezing'],
         keywords: ['wheezing', 'wheeze'],
       },
       {
         id: 'leg',
-        answer: "Now that you mention it, one of my legs has felt more swollen recently.",
+        answer:
+          "One leg — the calf — has felt swollen and sore compared to the other. I didn't think much of it until all this breathing trouble.",
         patterns: [
           'leg swelling',
           'any swelling in your legs',
@@ -760,44 +872,22 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
         keywords: ['leg', 'swelling', 'calf'],
       },
       {
-        id: 'medical-history',
-        answer:
-          "I have high blood pressure, and my doctor said my cholesterol is a little high. I don't have asthma or COPD that I know of.",
-        patterns: [
-          'do you have any medical conditions',
-          'past medical history',
-          'medical problems',
-          'health conditions',
-        ],
-        keywords: ['medical', 'history', 'conditions'],
-      },
-      {
-        id: 'medications',
-        answer:
-          "I take lisinopril for blood pressure and a statin — atorvastatin — for cholesterol. That's about it for daily meds.",
-        patterns: [
-          'do you take any medications',
-          'medications',
-          'medicines',
-          'what do you take',
-        ],
-        keywords: ['medications', 'medicines'],
-      },
-      {
         id: 'allergies',
-        answer: "I don't have any known allergies.",
+        answer: "No known allergies to medicines.",
         patterns: ['allergies', 'allergic to anything'],
         keywords: ['allergies', 'allergic'],
       },
       {
         id: 'smoking',
-        answer: "I used to smoke, but not heavily.",
+        answer:
+          "I smoked years ago but quit — not a current heavy smoker.",
         patterns: ['do you smoke', 'smoking history', 'tobacco'],
         keywords: ['smoke', 'smoking', 'tobacco'],
       },
       {
         id: 'travel',
-        answer: "I was sitting for a long time recently during travel.",
+        answer:
+          "I was on a long flight recently — stuck sitting for hours. That's when my leg started feeling weird.",
         patterns: [
           'recent travel',
           'long car ride',
@@ -808,7 +898,8 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       },
       {
         id: 'before',
-        answer: "No, this hasn't happened to me before.",
+        answer:
+          "No — I've been short of breath with exertion before, but not like this out of the blue.",
         patterns: ['have you had this before', 'similar episode before'],
         keywords: ['before', 'similar'],
       },
@@ -824,57 +915,104 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
     ],
     complaintMatchers: ['abdominal pain', 'right side', 'stomach hurts'],
     defaultAnswer:
-      "My stomach started hurting earlier today, and now it's mostly on the lower right side. It gets worse when I move.",
+      "My stomach's been killing me since earlier — it started near my belly button and moved to the lower right. Sharp pain, worse when I walk. I'm nauseous and haven't eaten.",
     qa: [
       {
         id: 'feeling-open',
         answer:
-          "My whole belly felt off earlier, then the pain settled into the right lower side — sharp, worse when I walk or bounce. I'm nauseous and had a low fever at home.",
+          "I'm pretty miserable. Earlier today my whole belly felt off, then the pain moved down to my right lower side — sharp and constant. Walking makes it spike, I feel nauseous and I threw up once, and I haven't wanted food. I had a low-grade fever at home. No diarrhea, and it doesn't burn when I pee.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
           'tell me more about what you re feeling',
+          'tell me more about your symptoms',
+          'tell me more about your symptom',
         ],
-        keywords: ['feeling', 'more', 'tell'],
+        keywords: ['feeling', 'more', 'tell', 'symptoms', 'symptom'],
       },
       {
         id: 'chief-complaint',
         answer:
-          "My stomach started hurting earlier today, and now the pain is mostly on the lower right side.",
+          "What brought me in is bad stomach pain that started around my belly button and settled in my right lower abdomen. I'm a college student — I tried to tough it out but it's getting worse.",
         patterns: [
+          'what brought you in today',
           'what brought you in',
           'what seems to be the problem',
           'what happened',
           'why are you here',
         ],
-        keywords: ['problem', 'stomach', 'pain'],
+        keywords: ['problem', 'stomach', 'pain', 'brought'],
+      },
+      {
+        id: 'quality',
+        answer:
+          "It's sharp — like a stabbing cramp in one area — and it gets worse when I move or jostle. Not really burning like heartburn; more like something's inflamed down there.",
+        patterns: [
+          'what does it feel like',
+          'what kind of pain is it',
+          'can you describe it more',
+          'describe it more',
+          'describe the pain',
+        ],
+        keywords: ['sharp', 'feel', 'describe', 'kind', 'pain'],
       },
       {
         id: 'onset',
-        answer: "It started earlier today around my belly button.",
+        answer:
+          "It started earlier today — first I noticed it more around my belly button, then it migrated. If you mean exact time, late morning-ish, but it's been a few hours now.",
         patterns: [
           'when did this start',
           'when did it start',
           'when did this begin',
           'how long',
+          'how long has this been going on',
         ],
-        keywords: ['when', 'start', 'begin'],
+        keywords: ['when', 'start', 'begin', 'long'],
       },
       {
         id: 'trajectory',
         answer:
-          "It's gotten worse as the day went on — especially after it moved to the right lower side.",
+          "It's gotten worse — especially since the pain moved to the right lower side. I'm not improving.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
           'better or worse',
+          'has the pain changed over time',
+          'pain changed over time',
         ],
-        keywords: ['better', 'worse'],
+        keywords: ['better', 'worse', 'changed', 'time'],
+      },
+      {
+        id: 'location',
+        answer:
+          "Right now the worst spot is my right lower abdomen — like down and to the side of my belly button. That's where it hurts to press or move.",
+        patterns: [
+          'where exactly do you feel it',
+          'where is the pain',
+          'where does it hurt',
+          'show me where it hurts',
+          'can you point to where it hurts',
+          'point to where it hurts',
+        ],
+        keywords: ['where', 'location', 'right', 'point'],
+      },
+      {
+        id: 'radiation',
+        answer:
+          "It started more in the middle near my belly button, but now it's mostly the lower right — it doesn't really shoot up to my shoulder. It's localized down there.",
+        patterns: [
+          'does it go anywhere else',
+          'does the pain travel',
+          'does it radiate',
+          'does the pain radiate',
+          'go anywhere else',
+        ],
+        keywords: ['anywhere', 'else', 'radiate', 'travel'],
       },
       {
         id: 'migration',
         answer:
-          "It started around my belly button and then moved down to the right lower side.",
+          "Yeah — classic weird story — it began periumbilical, around my belly button, then moved to the RLQ. That's what freaked me out.",
         patterns: [
           'did the pain move',
           'has the location changed',
@@ -884,145 +1022,126 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
         keywords: ['move', 'moved', 'belly', 'button', 'right'],
       },
       {
-        id: 'radiation',
-        answer:
-          "It stays focused in the right lower belly — it doesn't really shoot to my shoulder or all over.",
-        patterns: [
-          'does it go anywhere else',
-          'does the pain travel',
-          'does it radiate',
-          'go anywhere else',
-        ],
-        keywords: ['anywhere', 'else', 'radiate', 'travel'],
-      },
-      {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "I'm not short of breath. I've been nauseous and threw up once, and I've felt a bit sweaty with the fever.",
+          "I'm not short of breath. I'm definitely nauseous and I puked once. I've felt a little sweaty with the fever but not like drenched.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
           'shortness of breath nausea sweating',
+          'any other symptoms',
+          'other symptoms',
         ],
-        keywords: ['shortness', 'breath', 'nausea', 'sweating'],
-      },
-      {
-        id: 'location',
-        answer: "Right now it's in the lower right side of my abdomen.",
-        patterns: [
-          'where exactly do you feel it',
-          'where is the pain',
-          'where does it hurt',
-          'show me where it hurts',
-        ],
-        keywords: ['where', 'location', 'right'],
-      },
-      {
-        id: 'quality',
-        answer:
-          "It's a sharp, constant pain — like something's irritated right there — and it spikes when I move.",
-        patterns: ['what does it feel like', 'describe the pain'],
-        keywords: ['sharp', 'feel', 'describe'],
-      },
-      {
-        id: 'severity',
-        answer: "It's about an 8 out of 10.",
-        patterns: ['how bad is it', 'from 1 to 10', 'pain scale'],
-        keywords: ['bad', 'scale', '8', '10'],
+        keywords: ['shortness', 'breath', 'nausea', 'sweating', 'symptoms'],
       },
       {
         id: 'worse',
         answer:
-          "Walking, bouncing my heel, and even pressing on the area make it worse. I want to lie still.",
+          "Walking, going over bumps in the car, even getting up — anything that jiggles my belly makes it worse. Lying still is a little better but not great.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
           'worse with movement',
           'worse walking',
+          'what makes it better or worse',
         ],
-        keywords: ['worse', 'walking', 'moving', 'movement'],
+        keywords: ['worse', 'walking', 'moving', 'movement', 'better'],
       },
       {
         id: 'better',
-        answer: "Nothing really seems to make it better.",
+        answer:
+          "Lying on my side with my knees bent helps a little. Nothing makes it go away.",
         patterns: ['what makes it better', 'anything help', 'relieve it'],
         keywords: ['better', 'help', 'relieve'],
       },
       {
+        id: 'medical-history',
+        answer:
+          "I'm usually healthy — no major medical problems, no Crohn's or anything like that. I've never had surgery on my belly.",
+        patterns: [
+          'do you have any medical conditions',
+          'any past medical history',
+          'past medical history',
+          'medical problems',
+          'health conditions',
+        ],
+        keywords: ['medical', 'history', 'conditions', 'past'],
+      },
+      {
+        id: 'medications',
+        answer:
+          "I don't take any regular prescriptions — maybe ibuprofen once in a while for a headache, but that's it.",
+        patterns: [
+          'do you take any medications',
+          'what meds do you take',
+          'medications',
+          'medicines',
+          'what do you take',
+        ],
+        keywords: ['medications', 'medicines', 'meds', 'take'],
+      },
+      {
+        id: 'severity',
+        answer:
+          "Pretty bad — like an 8 out of 10. Enough that I couldn't focus in class.",
+        patterns: ['how bad is it', 'from 1 to 10', 'pain scale'],
+        keywords: ['bad', 'scale', '8', '10'],
+      },
+      {
         id: 'nausea',
-        answer: "Yeah, I feel nauseous.",
+        answer: "Yeah — I'm nauseous. I threw up once.",
         patterns: ['nausea', 'are you nauseous', 'feel sick'],
         keywords: ['nausea', 'nauseous', 'sick'],
       },
       {
         id: 'vomiting',
-        answer: "I threw up once.",
+        answer: "Once — dry heaves mostly, little came up.",
         patterns: ['have you vomited', 'any vomiting', 'throw up'],
         keywords: ['vomit', 'vomited', 'throw'],
       },
       {
         id: 'appetite',
-        answer: "I don't really want to eat anything.",
+        answer:
+          "Zero appetite — the thought of food makes me feel sicker.",
         patterns: ['appetite', 'are you hungry', 'loss of appetite'],
         keywords: ['appetite', 'hungry', 'eat'],
       },
       {
         id: 'fever',
-        answer: "I had a low fever at home.",
+        answer:
+          "I felt warm at home — low-grade. I didn't take it perfectly accurately.",
         patterns: ['fever', 'any fever', 'temperature'],
         keywords: ['fever', 'temperature'],
       },
       {
         id: 'diarrhea',
-        answer: "No, I don't have diarrhea.",
+        answer: "No diarrhea — bowel movements have been pretty normal.",
         patterns: ['diarrhea', 'loose stool'],
         keywords: ['diarrhea', 'stool'],
       },
       {
         id: 'urinary',
-        answer: "No, it doesn't burn when I pee.",
+        answer:
+          "No burning when I pee, no frequency like a UTI.",
         patterns: ['pain with urination', 'burning urination', 'urinary symptoms'],
         keywords: ['urination', 'pee', 'burning', 'urinary'],
       },
       {
         id: 'trauma',
-        answer: "No, I didn't get injured.",
+        answer:
+          "No injury — I didn't get hit in the stomach or fall.",
         patterns: ['any injury', 'trauma', 'did you fall'],
         keywords: ['injury', 'trauma'],
       },
       {
-        id: 'medical-history',
-        answer:
-          "I'm usually healthy — no diabetes, no inflammatory bowel problems that I know of. I've never had anything like this before.",
-        patterns: [
-          'do you have any medical conditions',
-          'past medical history',
-          'medical problems',
-          'health conditions',
-        ],
-        keywords: ['medical', 'history', 'conditions'],
-      },
-      {
         id: 'surgeries',
-        answer: "I've never had surgery.",
+        answer: "Never had abdominal surgery.",
         patterns: ['any surgeries', 'have you had surgery before'],
         keywords: ['surgery', 'surgeries'],
       },
       {
-        id: 'medications',
-        answer:
-          "I don't take any regular prescriptions — just occasional ibuprofen for headaches.",
-        patterns: [
-          'do you take any medications',
-          'medications',
-          'medicines',
-          'what do you take',
-        ],
-        keywords: ['medications', 'medicines'],
-      },
-      {
         id: 'allergies',
-        answer: "I don't have any allergies that I know of.",
+        answer: "No allergies to meds that I know of.",
         patterns: ['allergies', 'allergic to anything'],
         keywords: ['allergies', 'allergic'],
       },
@@ -1034,79 +1153,94 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
     titleMatchers: ['fever and confusion', 'confusion'],
     complaintMatchers: ['fever', 'confusion', 'acute confusion'],
     defaultAnswer:
-      "I don't feel right. I've had a fever, and everything feels kind of foggy.",
+      "I don't feel right — I'm burning up and my daughter says I'm not making sense. Everything's foggy. I'm weak and scared.",
     qa: [
       {
         id: 'feeling-open',
         answer:
-          "My head feels foggy, I'm hot and sweaty, and I'm not thinking straight. I'm a little nauseous, and it burns when I pee. I feel weaker than usual — this started today and has been sliding downhill.",
+          "I feel awful — hot and then cold, and my head isn't working right. I'm confused about where I am sometimes, and I'm weaker than usual. It burns a little when I pee. My family says I started acting strange this morning. I'm trying to answer you but I'm foggy — I have diabetes and high blood pressure, and I take pills, but I can't remember every name right now.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
           'tell me more about what you re feeling',
+          'tell me more about your symptoms',
+          'tell me more about your symptom',
         ],
-        keywords: ['feeling', 'more', 'tell'],
+        keywords: ['feeling', 'more', 'tell', 'symptoms', 'symptom'],
       },
       {
         id: 'chief-complaint',
         answer:
-          "I've had a fever, and I've been feeling confused — not like myself.",
+          "What brought me in — according to my daughter — is I've had a high fever and I'm not myself. I'm muddled, shaky, and I feel sick all over. I know something's wrong.",
         patterns: [
+          'what brought you in today',
           'what brought you in',
           'what seems to be the problem',
           'why are you here',
           'what happened',
         ],
-        keywords: ['problem', 'fever', 'confused'],
+        keywords: ['problem', 'fever', 'confused', 'brought'],
+      },
+      {
+        id: 'quality',
+        answer:
+          "It's hard to describe — it's not just pain. I feel boiling one minute and freezing the next, and my thinking is slow and fuzzy, like I'm underwater. I'm nauseous off and on.",
+        patterns: [
+          'what does it feel like',
+          'what kind of pain is it',
+          'can you describe it more',
+          'describe it more',
+          'describe what you re feeling',
+        ],
+        keywords: ['feel', 'describe', 'like', 'kind', 'pain'],
       },
       {
         id: 'onset',
         answer:
-          "It started this morning and has gotten worse through the day — I wasn't this confused earlier.",
+          "This morning is when my family noticed it — I wasn't this bad yesterday. It's been getting worse through the day, as far as I can tell.",
         patterns: [
           'when did this start',
           'when did it start',
           'how long has this been going on',
+          'how long has it been going on',
         ],
         keywords: ['when', 'start', 'long'],
       },
       {
         id: 'trajectory',
         answer:
-          "Worse — I was a little off earlier, but now I'm really foggy and weak.",
+          "Worse — I was a little off earlier, but now I'm really out of it and weak. I'm not improving.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
           'better or worse',
+          'has the pain changed over time',
+          'pain changed over time',
         ],
-        keywords: ['better', 'worse'],
-      },
-      {
-        id: 'quality',
-        answer:
-          "It doesn't feel like pain so much as a hot, foggy, sick feeling — I can't focus and I don't feel steady.",
-        patterns: ['what does it feel like', 'describe what you re feeling'],
-        keywords: ['feel', 'describe', 'like'],
+        keywords: ['better', 'worse', 'changed', 'time'],
       },
       {
         id: 'location',
         answer:
-          "It's not one sharp spot — I feel hot and unwell all over, and my head feels foggy.",
+          "It's not really one spot — I feel sick everywhere, and my head feels heavy and confused. The burning when I pee is lower down — that's the only localized thing.",
         patterns: [
           'where exactly do you feel it',
           'where do you feel it',
           'where is the discomfort',
+          'can you point to where it hurts',
+          'point to where it hurts',
         ],
-        keywords: ['where', 'feel'],
+        keywords: ['where', 'feel', 'point'],
       },
       {
         id: 'radiation',
         answer:
-          "The weird feeling doesn't travel like shooting pain — it's more my whole-body fever and my head fog.",
+          "The confusion and fever don't 'travel' like pain down an arm — it's more all-over sickness. The urinary burning is separate, down low.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
           'does it radiate',
+          'does the pain radiate',
           'go anywhere else',
         ],
         keywords: ['anywhere', 'else', 'radiate', 'travel'],
@@ -1114,87 +1248,99 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "I'm not really short of breath. I feel a bit nauseous. I've been sweating with the fever.",
+          "I'm not really short of breath — a little winded when I'm feverish maybe. I feel nauseous. I've been sweating with the fever, drenched off and on.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
           'shortness of breath nausea sweating',
+          'any other symptoms',
+          'other symptoms',
         ],
-        keywords: ['shortness', 'breath', 'nausea', 'sweating'],
+        keywords: ['shortness', 'breath', 'nausea', 'sweating', 'symptoms'],
       },
       {
         id: 'worse',
         answer:
-          "Trying to move around and do things makes me feel worse. I want to lie still.",
+          "Trying to stand up and walk makes me feel worse — I want to lie still. Bright lights bother me a bit. Nothing fixes it.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
           'anything make it worse',
+          'what makes it better or worse',
         ],
-        keywords: ['worse', 'anything'],
+        keywords: ['worse', 'anything', 'better'],
+      },
+      {
+        id: 'medical-history',
+        answer:
+          "I have diabetes and high blood pressure — I've had both for years. I don't remember every hospital visit, but those are the big ones my family reminds me about.",
+        patterns: [
+          'do you have any medical conditions',
+          'any past medical history',
+          'past medical history',
+          'medical problems',
+        ],
+        keywords: ['medical', 'history', 'conditions', 'past'],
+      },
+      {
+        id: 'medications',
+        answer:
+          "I take pills for blood sugar and blood pressure — metformin I know for sure, and something for pressure — maybe lisinopril? I also take a water pill sometimes. I'm sorry, I'm fuzzy on the full list today.",
+        patterns: [
+          'do you take any medications',
+          'what meds do you take',
+          'medications',
+          'medicines',
+          'what do you take',
+        ],
+        keywords: ['medications', 'medicines', 'meds', 'take'],
       },
       {
         id: 'fever',
-        answer: "Yes, I've had a fever — I've felt hot and cold.",
+        answer:
+          "Yes — I've been burning up. Chills too. My family said I felt hot.",
         patterns: ['fever', 'any fever', 'temperature'],
         keywords: ['fever', 'temperature'],
       },
       {
         id: 'confusion',
-        answer: "Yes, I feel confused and not like myself.",
+        answer:
+          "I know I'm not thinking clearly — I'm mixing things up, asking the same thing twice. That's not normal for me.",
         patterns: ['are you confused', 'what do you mean by confusion', 'mental status'],
         keywords: ['confused', 'confusion', 'mental'],
       },
       {
         id: 'weakness',
-        answer: "I feel weak and tired.",
+        answer:
+          "I'm weak — I can barely walk to the bathroom. My legs feel like jelly.",
         patterns: ['weak', 'fatigue', 'tired'],
         keywords: ['weak', 'fatigue', 'tired'],
       },
       {
         id: 'cough',
-        answer: "I don't really have much of a cough.",
+        answer:
+          "Not really — a little throat tickle maybe, but no bad cough.",
         patterns: ['cough', 'are you coughing'],
         keywords: ['cough'],
       },
       {
         id: 'urinary',
-        answer: "It does burn a little when I pee.",
+        answer:
+          "Yes — it burns when I pee, and I've been going more often. That's been part of today.",
         patterns: ['burning urination', 'pain with urination', 'urinary symptoms'],
         keywords: ['burning', 'urination', 'pee', 'urinary'],
       },
       {
         id: 'abd-pain',
-        answer: "I don't really have bad belly pain.",
+        answer:
+          "My belly's not the main thing — a little achy maybe, but not like bad appendicitis pain or anything.",
         patterns: ['abdominal pain', 'belly pain'],
         keywords: ['abdominal', 'belly', 'pain'],
       },
       {
-        id: 'medical-history',
-        answer:
-          "I have high blood pressure, and my doctor said I'm at risk for diabetes — I take pills for the blood pressure.",
-        patterns: [
-          'do you have any medical conditions',
-          'past medical history',
-          'medical problems',
-        ],
-        keywords: ['medical', 'history', 'conditions'],
-      },
-      {
-        id: 'medications',
-        answer:
-          "I take something for blood pressure — I think it's lisinopril — and a water pill. I forget names sometimes.",
-        patterns: [
-          'do you take any medications',
-          'medications',
-          'medicines',
-          'what do you take',
-        ],
-        keywords: ['medications', 'medicines'],
-      },
-      {
         id: 'allergies',
-        answer: "I don't remember having any medication allergies.",
+        answer:
+          "I don't think I'm allergic to medicines — nothing I remember.",
         patterns: ['allergies', 'allergic to anything'],
         keywords: ['allergies', 'allergic'],
       },

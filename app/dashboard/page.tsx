@@ -111,10 +111,20 @@ export default async function DashboardPage() {
             let detail = ''
             if (sum.displayStatus === 'in_progress') {
               label = '🟡 In progress'
-              detail = sum.bestScore != null ? `Best score ${sum.bestScore}` : ''
+              detail = [
+                sum.bestScore != null ? `⭐ Best ${sum.bestScore}` : '',
+                sum.lastAttemptScore != null ? `🔁 Last ${sum.lastAttemptScore}` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')
             } else if (sum.displayStatus === 'completed') {
               label = '✅ Completed'
-              detail = sum.bestScore != null ? `Best ${sum.bestScore}` : ''
+              detail = [
+                sum.bestScore != null ? `⭐ Best ${sum.bestScore}` : '',
+                sum.lastAttemptScore != null ? `🔁 Last ${sum.lastAttemptScore}` : '',
+              ]
+                .filter(Boolean)
+                .join(' · ')
             }
             return (
               <Link

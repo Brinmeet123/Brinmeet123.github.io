@@ -35,7 +35,6 @@ export async function POST(req: Request) {
 
       const prevScore = prev?.score ?? 0
       const nextScore = Math.max(prevScore, score)
-      const delta = nextScore - prevScore
       const firstCompletion = !prev
 
       await tx.scenarioProgress.upsert({
@@ -56,10 +55,10 @@ export async function POST(req: Request) {
         },
       })
 
-      const userUpdate: { totalScore?: { increment: number }; streak?: { increment: number } } = {}
-      if (delta > 0) userUpdate.totalScore = { increment: delta }
+      // User.totalScore is derived only from scenario_attempts (see /api/scenario/complete).
+      // This legacy route does not write attempts; only bump streak on first ScenarioProgress row.
+      const userUpdate: { streak?: { increment: number } } = {}
       if (firstCompletion) userUpdate.streak = { increment: 1 }
-
       if (Object.keys(userUpdate).length > 0) {
         await tx.user.update({
           where: { id: userId },

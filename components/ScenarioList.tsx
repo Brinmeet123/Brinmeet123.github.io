@@ -7,6 +7,7 @@ import ScenarioCard from './ScenarioCard'
 export type ScenarioProgressInfo = {
   status: string
   bestScore: number | null
+  lastAttemptScore: number | null
 }
 
 type Props = {

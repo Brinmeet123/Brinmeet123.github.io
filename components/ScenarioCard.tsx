@@ -59,8 +59,20 @@ export default function ScenarioCard({ scenario, progress }: Props) {
           <span className="text-sm text-gray-500 mx-2">•</span>
           <span className="text-sm text-gray-500">{scenario.estimatedMinutes} min</span>
         </div>
-        <p className="text-gray-600 text-sm flex-grow mb-4">{scenario.description}</p>
-        <div className="flex items-center text-primary-600 text-sm font-medium">
+        <p className="text-gray-600 text-sm flex-grow mb-3">{scenario.description}</p>
+        {progress &&
+          (progress.bestScore != null || progress.lastAttemptScore != null) &&
+          (progress.status === 'completed' || progress.status === 'in_progress') && (
+            <p className="text-xs text-slate-600 tabular-nums mb-4">
+              {progress.bestScore != null && <span>⭐ Best {progress.bestScore}</span>}
+              {progress.lastAttemptScore != null && (
+                <span>
+                  {progress.bestScore != null ? ' · ' : ''}🔁 Last {progress.lastAttemptScore}
+                </span>
+              )}
+            </p>
+          )}
+        <div className="flex items-center text-primary-600 text-sm font-medium mt-auto">
           Start Scenario →
         </div>
       </div>
