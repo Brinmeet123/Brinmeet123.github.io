@@ -19,10 +19,8 @@ const coreQuestions = [
 export default function SimpleQuestionBank({ onInsertQuestion }: Props) {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-medium text-gray-700 mb-2">Question Templates</h3>
-      <p className="text-xs text-gray-600 mb-3">
-        Click to insert into chat
-      </p>
+      <h3 className="text-sm font-semibold text-gray-900 mb-1">📌 Quick Questions (Click to Ask)</h3>
+      <p className="text-xs text-gray-600 mb-3">Sends immediately to the patient</p>
       <div className="grid grid-cols-1 gap-1.5">
         {coreQuestions.map((question, idx) => (
           <button

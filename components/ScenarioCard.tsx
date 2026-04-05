@@ -73,7 +73,7 @@ export default function ScenarioCard({ scenario, progress }: Props) {
             </p>
           )}
         <div className="flex items-center text-primary-600 text-sm font-medium mt-auto">
-          Start Scenario →
+          Start Case →
         </div>
       </div>
     </Link>

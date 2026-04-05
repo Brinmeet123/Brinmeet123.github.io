@@ -147,6 +147,19 @@ export default function DiagnosisPanel({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
+        <p className="text-base font-bold text-slate-900">🧪 Step 3: Make Your Diagnosis</p>
+        <p className="mt-2 text-sm text-slate-700">Based on your conversation:</p>
+        <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-slate-700">
+          <li>Add likely diagnoses to your differential and rank them</li>
+          <li>Add reasoning notes (why you think each possibility fits)</li>
+          <li>Select one final diagnosis from your list</li>
+        </ol>
+        <p className="mt-3 text-sm text-slate-600">
+          💡 Be specific — this affects your score
+        </p>
+      </div>
+
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Diagnosis</h2>
       
       <div className="flex flex-col lg:flex-row gap-4">
@@ -195,7 +208,7 @@ export default function DiagnosisPanel({
           <div className="mb-4">
             <input
               type="text"
-              placeholder="Search diagnoses..."
+              placeholder="(e.g., Myocardial Infarction) — search diagnoses..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -344,7 +357,7 @@ export default function DiagnosisPanel({
                         type="text"
                         value={item.note || ''}
                         onChange={(e) => handleUpdateNote(item.dxId, e.target.value)}
-                        placeholder="Brief reasoning..."
+                        placeholder="(e.g., Chest pain radiating to arm, elevated troponin)"
                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm"
                       />
                     </div>
@@ -403,7 +416,7 @@ export default function DiagnosisPanel({
         disabled={!finalDxId || differential.length === 0}
         className="w-full mt-6 px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
       >
-        Get Assessment
+        Submit Diagnosis & See Results
       </button>
     </div>
   )

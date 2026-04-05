@@ -13,6 +13,9 @@ import DiagnosisPanel from './DiagnosisPanel'
 import SummaryPanel from './SummaryPanel'
 import SectionNav, { ClinicalSection } from './SectionNav'
 import HistoryHelperPanel from './HistoryHelperPanel'
+import SimulatorProgressBar from './simulator/SimulatorProgressBar'
+import SimulatorHelpButton from './simulator/SimulatorHelpButton'
+import type { SimulatorStep } from './simulator/SimulatorProgressBar'
 
 type Message = {
   role: 'doctor' | 'patient'
@@ -211,8 +214,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
   }
 
   const handleInsertQuestion = (question: string) => {
-    // Dispatch custom event for ChatPanel to handle
-    const event = new CustomEvent('insert-question', { detail: { question } })
+    const event = new CustomEvent('send-preset-question', { detail: { question } })
     window.dispatchEvent(event)
   }
 
@@ -365,6 +367,30 @@ export default function ScenarioPlayer({ scenario }: Props) {
   const canAccessDiagnosis = viewedExamSections.length > 0 && orderedTests.size > 0
   const canAccessDebrief = finalDiagnosisId !== null
 
+  const doctorTurns = chatMessages.filter((m) => m.role === 'doctor').length
+  const learnerStep: SimulatorStep =
+    activeSection === 'debrief' ? 4 : activeSection === 'diagnosis' ? 3 : 2
+
+  const readinessLine = (() => {
+    if (doctorTurns < 3) {
+      return { ok: false, text: '🟡 Ask a few more questions before diagnosing' }
+    }
+    if (!canAccessDiagnosis) {
+      return {
+        ok: false,
+        text: '🟡 Complete the physical exam and order at least one test before diagnosing',
+      }
+    }
+    return { ok: true, text: '🟢 You’re ready to make a diagnosis' }
+  })()
+
+  const primaryContinue =
+    canAccessDiagnosis
+      ? { label: 'Finish Interview → Make Diagnosis', section: 'diagnosis' as ClinicalSection }
+      : viewedExamSections.length === 0
+        ? { label: 'Continue to Physical Exam →', section: 'exam' as ClinicalSection }
+        : { label: 'Continue to Order Tests →', section: 'tests' as ClinicalSection }
+
   const sections = [
     {
       id: 'history' as ClinicalSection,
@@ -406,6 +432,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <SimulatorProgressBar currentStep={learnerStep} className="mb-4" />
+      <SimulatorHelpButton currentStep={learnerStep} activeSection={activeSection} />
+
       <div className="mb-6">
         <div className="mb-2">
           <div>
@@ -447,6 +476,41 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {/* Render only the active section */}
       {activeSection === 'history' && (
         <>
+          <div className="mb-4 space-y-3 rounded-xl border border-slate-200/90 bg-slate-50/95 p-4 shadow-sm">
+            <div className="rounded-lg border border-primary-100 bg-white/90 p-4 text-sm leading-relaxed text-slate-800">
+              <p className="font-bold text-slate-900">🧠 Step 2: Talk to the Patient</p>
+              <p className="mt-2">
+                Choose a question below <span className="font-medium">or</span> type your own.
+              </p>
+              <ul className="mt-2 list-inside list-disc space-y-1 text-slate-700">
+                <li>Click a question → it sends automatically</li>
+                <li>Or type your own like a real doctor</li>
+              </ul>
+              <p className="mt-3 font-medium text-slate-900">Your goal:</p>
+              <p className="mt-1">→ Understand symptoms → Gather key details → Figure out the diagnosis</p>
+              <p className="mt-3 font-medium text-primary-800">
+                👉 When ready, use the button below to move forward (exam → tests → diagnosis).
+              </p>
+            </div>
+            <div
+              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                readinessLine.ok
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                  : 'border-amber-200 bg-amber-50 text-amber-900'
+              }`}
+              role="status"
+            >
+              {readinessLine.text}
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveSection(primaryContinue.section)}
+              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+            >
+              {primaryContinue.label}
+            </button>
+          </div>
+
           <DoctorPatientScene patientName={scenario.patientPersona.name} onPatientClick={scrollToChat} />
           
           {/* Mobile: Tabbed View */}
