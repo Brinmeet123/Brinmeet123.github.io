@@ -88,7 +88,7 @@ export default function ScenarioList({ scenarios, progressByScenario = {} }: Pro
 
         <div className="mt-6 max-w-xl">
           <NextStepGuidance compact>
-            Tap a case card to open it — use filters if you want a specific specialty or difficulty.
+            Ask a few more questions — then head to the exam when you feel ready.
           </NextStepGuidance>
         </div>
       </div>

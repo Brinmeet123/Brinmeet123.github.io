@@ -50,8 +50,7 @@ export default function AboutPage() {
 
         <div className="mt-10 max-w-lg not-prose">
           <NextStepGuidance>
-            Head to the case library, pick a scenario, and walk through the interview — that&apos;s the fastest way to
-            see how it works.
+            Ask a few more questions — then head to the exam when you feel ready.
           </NextStepGuidance>
         </div>
 

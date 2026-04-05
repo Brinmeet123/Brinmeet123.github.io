@@ -381,14 +381,6 @@ export default function ScenarioPlayer({ scenario }: Props) {
             ? 4
             : 5
 
-  /** Readiness for Step 1 (chat) only — next action is always the physical exam. */
-  const chatReadiness = (() => {
-    if (doctorTurns < 3) {
-      return { ok: false, text: 'Ask a few more questions — then head to the exam when you feel ready.' }
-    }
-    return { ok: true, text: "Nice — you've got enough history to move on. Continue to the exam." }
-  })()
-
   const sections = [
     {
       id: 'history' as ClinicalSection,
@@ -559,18 +551,8 @@ export default function ScenarioPlayer({ scenario }: Props) {
 
           <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
             <NextStepGuidance compact>
-              Keep asking until you understand the complaint — then tap Continue to move to the exam.
+              Ask a few more questions — then head to the exam when you feel ready.
             </NextStepGuidance>
-            <div
-              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
-                chatReadiness.ok
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                  : 'border-amber-200 bg-amber-50 text-amber-900'
-              }`}
-              role="status"
-            >
-              {chatReadiness.text}
-            </div>
             <button
               type="button"
               onClick={() => setActiveSection('exam')}
@@ -599,7 +581,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
           />
           <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
             <NextStepGuidance compact>
-              Review each relevant system — your findings will guide what you order next.
+              Ask a few more questions — then head to the exam when you feel ready.
             </NextStepGuidance>
             <button
               type="button"
@@ -628,8 +610,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
           />
           <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
             <NextStepGuidance compact>
-              Order what you need to narrow the problem — diagnosis opens after you've reviewed the exam and placed at
-              least one test.
+              Ask a few more questions — then head to the exam when you feel ready.
             </NextStepGuidance>
             {!canAccessDiagnosis && (
               <p className="text-sm text-amber-800">
@@ -662,7 +643,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
           />
           <div className="mb-4">
             <NextStepGuidance compact>
-              Add your working diagnoses, rank them, choose a final pick — then submit to see how you did.
+              Ask a few more questions — then head to the exam when you feel ready.
             </NextStepGuidance>
           </div>
           <DiagnosisPanel

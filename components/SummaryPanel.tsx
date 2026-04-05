@@ -398,7 +398,7 @@ export default function SummaryPanel({
 
       <div className="mt-8 space-y-4">
         <NextStepGuidance>
-          Run the case again to beat your score — or pick a new scenario to practice a different presentation.
+          Ask a few more questions — then head to the exam when you feel ready.
         </NextStepGuidance>
         <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-5">
           <p className="font-semibold text-slate-900">What do you want to do next?</p>

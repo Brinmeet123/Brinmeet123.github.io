@@ -15,7 +15,7 @@ export default function LoginPage() {
 
         <div className="mb-8">
           <NextStepGuidance compact>
-            Enter your credentials below — then head to <strong>Scenarios</strong> or <strong>Dashboard</strong> from the nav.
+            Ask a few more questions — then head to the exam when you feel ready.
           </NextStepGuidance>
         </div>
 

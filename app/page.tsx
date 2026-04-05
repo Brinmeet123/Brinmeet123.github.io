@@ -33,8 +33,7 @@ export default function Home() {
           </div>
           <div className="mt-10 max-w-lg mx-auto text-left">
             <NextStepGuidance compact>
-              Pick a case from the library, then start with the patient interview — suggested questions are there if
-              you want a fast start.
+              Ask a few more questions — then head to the exam when you feel ready.
             </NextStepGuidance>
           </div>
         </div>
