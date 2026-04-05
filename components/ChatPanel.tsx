@@ -45,18 +45,12 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   )
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [actionHint, setActionHint] = useState<string | null>(null)
   const messagesScrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const onChatUpdateRef = useRef(onChatUpdate)
   const isLoadingRef = useRef(false)
   onChatUpdateRef.current = onChatUpdate
   isLoadingRef.current = isLoading
-
-  const showHint = useCallback((msg: string) => {
-    setActionHint(msg)
-    window.setTimeout(() => setActionHint(null), 3500)
-  }, [])
 
   // Sync with parent when messages change (stable ref avoids re-running when parent omits useCallback).
   useEffect(() => {
@@ -78,9 +72,8 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   }, [messages, isLoading])
 
   const runPatientTurn = useCallback(
-    async (newMessages: Message[], source: 'preset' | 'custom') => {
+    async (newMessages: Message[]) => {
       isLoadingRef.current = true
-      showHint('Sent.')
 
       setIsLoading(true)
       try {
@@ -97,7 +90,6 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
           if (shouldFallbackToPatientMocks()) {
             const mockMessage = getMockPatientResponse(scenario.id, newMessages)
             setMessages([...newMessages, { role: 'patient', content: mockMessage }])
-            showHint('Reply received.')
             return
           }
           let detail = `${response.status} ${response.statusText}`
@@ -144,13 +136,11 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
 
         const patientMessage: Message = { role: 'patient', content: data.message }
         setMessages([...newMessages, patientMessage])
-        showHint('Reply received.')
       } catch (error: any) {
         if (error?.message?.includes('Failed to fetch') || error?.message?.includes('Load failed')) {
           if (shouldFallbackToPatientMocks()) {
             const mockMessage = getMockPatientResponse(scenario.id, newMessages)
             setMessages([...newMessages, { role: 'patient', content: mockMessage }])
-            showHint('Reply received.')
             return
           }
           setMessages([
@@ -195,18 +185,18 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
         setIsLoading(false)
       }
     },
-    [scenario.id, showHint]
+    [scenario.id]
   )
 
   const appendAndRespond = useCallback(
-    (text: string, source: 'preset' | 'custom') => {
+    (text: string) => {
       if (isLoadingRef.current) return
       const trimmed = text.trim()
       if (!trimmed) return
       const doctorMessage: Message = { role: 'doctor', content: trimmed }
       setMessages((prev) => {
         const newMessages = [...prev, doctorMessage]
-        void runPatientTurn(newMessages, source)
+        void runPatientTurn(newMessages)
         return newMessages
       })
     },
@@ -218,7 +208,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
       const ce = e as CustomEvent<{ question?: string }>
       const q = ce.detail?.question?.trim()
       if (!q) return
-      appendAndRespond(q, 'preset')
+      appendAndRespond(q)
     }
     window.addEventListener('send-preset-question', handler as EventListener)
     return () => window.removeEventListener('send-preset-question', handler as EventListener)
@@ -229,7 +219,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
     if (!input.trim() || isLoading) return
     const text = input.trim()
     setInput('')
-    appendAndRespond(text, 'custom')
+    appendAndRespond(text)
   }
 
   return (
@@ -283,14 +273,6 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
         )}
       </div>
       </VocabContextBlock>
-      {actionHint && (
-        <p
-          className="mb-2 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-900"
-          role="status"
-        >
-          {actionHint}
-        </p>
-      )}
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           id="chat-input"
