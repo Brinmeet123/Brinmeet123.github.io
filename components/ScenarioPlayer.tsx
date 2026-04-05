@@ -369,27 +369,23 @@ export default function ScenarioPlayer({ scenario }: Props) {
 
   const doctorTurns = chatMessages.filter((m) => m.role === 'doctor').length
   const learnerStep: SimulatorStep =
-    activeSection === 'debrief' ? 4 : activeSection === 'diagnosis' ? 3 : 2
+    activeSection === 'history'
+      ? 1
+      : activeSection === 'exam'
+        ? 2
+        : activeSection === 'tests'
+          ? 3
+          : activeSection === 'diagnosis'
+            ? 4
+            : 5
 
-  const readinessLine = (() => {
+  /** Readiness for Step 1 (chat) only — next action is always the physical exam. */
+  const chatReadiness = (() => {
     if (doctorTurns < 3) {
-      return { ok: false, text: '🟡 Ask a few more questions before diagnosing' }
+      return { ok: false, text: '🟡 Ask a few more questions before continuing' }
     }
-    if (!canAccessDiagnosis) {
-      return {
-        ok: false,
-        text: '🟡 Complete the physical exam and order at least one test before diagnosing',
-      }
-    }
-    return { ok: true, text: '🟢 You’re ready to make a diagnosis' }
+    return { ok: true, text: '🟢 Ready to continue to the physical exam' }
   })()
-
-  const primaryContinue =
-    canAccessDiagnosis
-      ? { label: 'Finish Interview → Make Diagnosis', section: 'diagnosis' as ClinicalSection }
-      : viewedExamSections.length === 0
-        ? { label: 'Continue to Physical Exam →', section: 'exam' as ClinicalSection }
-        : { label: 'Continue to Order Tests →', section: 'tests' as ClinicalSection }
 
   const sections = [
     {
@@ -476,9 +472,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {/* Render only the active section */}
       {activeSection === 'history' && (
         <>
-          <div className="mb-4 space-y-3 rounded-xl border border-slate-200/90 bg-slate-50/95 p-4 shadow-sm">
+          <div className="mb-4 rounded-xl border border-slate-200/90 bg-slate-50/95 p-4 shadow-sm">
             <div className="rounded-lg border border-primary-100 bg-white/90 p-4 text-sm leading-relaxed text-slate-800">
-              <p className="font-bold text-slate-900">🧠 Step 2: Talk to the Patient</p>
+              <p className="font-bold text-slate-900">🧠 Step 1: Talk to the Patient</p>
               <p className="mt-2">
                 Choose a question below <span className="font-medium">or</span> type your own.
               </p>
@@ -489,26 +485,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
               <p className="mt-3 font-medium text-slate-900">Your goal:</p>
               <p className="mt-1">→ Understand symptoms → Gather key details → Figure out the diagnosis</p>
               <p className="mt-3 font-medium text-primary-800">
-                👉 When ready, use the button below to move forward (exam → tests → diagnosis).
+                👉 When you are done chatting, scroll down and use Continue to go to the physical exam.
               </p>
             </div>
-            <div
-              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
-                readinessLine.ok
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
-                  : 'border-amber-200 bg-amber-50 text-amber-900'
-              }`}
-              role="status"
-            >
-              {readinessLine.text}
-            </div>
-            <button
-              type="button"
-              onClick={() => setActiveSection(primaryContinue.section)}
-              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
-            >
-              {primaryContinue.label}
-            </button>
           </div>
 
           <DoctorPatientScene patientName={scenario.patientPersona.name} onPatientClick={scrollToChat} />
@@ -589,28 +568,81 @@ export default function ScenarioPlayer({ scenario }: Props) {
               </div>
             </div>
           )}
+
+          <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+            <div
+              className={`rounded-lg border px-3 py-2 text-sm font-medium ${
+                chatReadiness.ok
+                  ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                  : 'border-amber-200 bg-amber-50 text-amber-900'
+              }`}
+              role="status"
+            >
+              {chatReadiness.text}
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveSection('exam')}
+              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+            >
+              Continue to Physical Exam →
+            </button>
+          </div>
         </>
       )}
 
       {activeSection === 'exam' && (
-        <PhysicalExamPanel
-          sections={scenario.physicalExam}
-          scenarioId={scenario.id}
-          viewedSections={viewedExamSections}
-          onSectionsViewed={handleExamSectionsViewed}
-          onTermClick={handleTermClick}
-          onTermSave={handleTermSave}
-        />
+        <>
+          <PhysicalExamPanel
+            sections={scenario.physicalExam}
+            scenarioId={scenario.id}
+            viewedSections={viewedExamSections}
+            onSectionsViewed={handleExamSectionsViewed}
+            onTermClick={handleTermClick}
+            onTermSave={handleTermSave}
+          />
+          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+            <button
+              type="button"
+              onClick={() => setActiveSection('tests')}
+              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+            >
+              Continue to Order Tests →
+            </button>
+          </div>
+        </>
       )}
 
       {activeSection === 'tests' && (
-        <TestsPanel 
-          scenario={scenario} 
-          orderedTests={orderedTests}
-          onTestsOrdered={handleTestsOrdered}
-          onTermClick={handleTermClick}
-          onTermSave={handleTermSave}
-        />
+        <>
+          <TestsPanel
+            scenario={scenario}
+            orderedTests={orderedTests}
+            onTestsOrdered={handleTestsOrdered}
+            onTermClick={handleTermClick}
+            onTermSave={handleTermSave}
+          />
+          <div className="mt-6 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+            {!canAccessDiagnosis && (
+              <p className="text-sm text-amber-800">
+                View at least one physical exam section and order at least one test to unlock diagnosis.
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => setActiveSection('diagnosis')}
+              disabled={!canAccessDiagnosis}
+              title={
+                canAccessDiagnosis
+                  ? undefined
+                  : 'Complete the exam and order at least one test first.'
+              }
+              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Continue to Diagnosis →
+            </button>
+          </div>
+        </>
       )}
 
       {activeSection === 'diagnosis' && (

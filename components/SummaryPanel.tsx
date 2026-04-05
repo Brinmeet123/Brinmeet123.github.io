@@ -162,7 +162,7 @@ export default function SummaryPanel({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <VocabContextBlock source="debrief" scenarioId={scenario.id} text={debriefContext}>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">📊 Step 4: Your Results</h2>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">📊 Step 5: Your Results</h2>
       <p className="mb-6 text-sm text-slate-600">Assessment and debrief for this case</p>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">

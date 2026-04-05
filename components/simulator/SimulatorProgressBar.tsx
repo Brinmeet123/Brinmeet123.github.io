@@ -1,12 +1,14 @@
 'use client'
 
-export type SimulatorStep = 1 | 2 | 3 | 4
+/** In-case flow: Chat → Exam → Tests → Diagnosis → Results */
+export type SimulatorStep = 1 | 2 | 3 | 4 | 5
 
 const STEPS: { step: SimulatorStep; label: string }[] = [
-  { step: 1, label: 'Choose Scenario' },
-  { step: 2, label: 'Chat' },
-  { step: 3, label: 'Diagnosis' },
-  { step: 4, label: 'Results' },
+  { step: 1, label: 'Chat' },
+  { step: 2, label: 'View exams' },
+  { step: 3, label: 'Order tests' },
+  { step: 4, label: 'Diagnosis' },
+  { step: 5, label: 'Results' },
 ]
 
 type Props = {
@@ -23,7 +25,7 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
         <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Your progress</p>
-        <ol className="flex flex-wrap items-center gap-x-1 gap-y-2 text-xs sm:text-sm">
+        <ol className="flex max-w-full flex-wrap items-center gap-x-1 gap-y-2 overflow-x-auto pb-0.5 text-xs sm:text-sm">
           {STEPS.map(({ step, label }, idx) => {
             const isCurrent = step === currentStep
             const isPast = step < currentStep
@@ -36,7 +38,7 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
                 )}
                 <span
                   className={[
-                    'inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-medium transition-colors',
+                    'inline-flex shrink-0 flex-col gap-0.5 rounded-full px-2 py-1 font-medium transition-colors sm:flex-row sm:items-center sm:gap-1',
                     isCurrent
                       ? 'bg-primary-100 text-primary-800 ring-1 ring-primary-200'
                       : isPast
@@ -45,8 +47,7 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
                   ].join(' ')}
                 >
                   <span className="tabular-nums text-[0.7rem] opacity-80">Step {step}</span>
-                  <span className="hidden sm:inline">{label}</span>
-                  <span className="sm:hidden">{label.split(' ')[0]}</span>
+                  <span className="leading-tight">{label}</span>
                 </span>
               </li>
             )

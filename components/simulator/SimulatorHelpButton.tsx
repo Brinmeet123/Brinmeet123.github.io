@@ -3,18 +3,18 @@
 import { useState } from 'react'
 import type { SimulatorStep } from './SimulatorProgressBar'
 import type { ClinicalSection } from '@/components/SectionNav'
-import { getSimulatorHelpCopy } from './simulatorHelpCopy'
+import { getScenarioLibraryHelpCopy, getSimulatorHelpCopy } from './simulatorHelpCopy'
 
-type Props = {
-  currentStep: SimulatorStep
-  activeSection?: ClinicalSection
-}
+type Props =
+  | { libraryPage: true; currentStep?: never; activeSection?: never }
+  | { libraryPage?: false; currentStep: SimulatorStep; activeSection?: ClinicalSection }
 
-export default function SimulatorHelpButton({ currentStep, activeSection }: Props) {
+export default function SimulatorHelpButton(props: Props) {
   const [open, setOpen] = useState(false)
-  const { stepName, whatToDo, nextStep } = getSimulatorHelpCopy(currentStep, {
-    activeSection,
-  })
+  const { stepName, whatToDo, nextStep } =
+    props.libraryPage === true
+      ? getScenarioLibraryHelpCopy()
+      : getSimulatorHelpCopy(props.currentStep, { activeSection: props.activeSection })
 
   return (
     <>

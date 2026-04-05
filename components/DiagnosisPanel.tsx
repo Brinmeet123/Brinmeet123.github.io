@@ -148,7 +148,7 @@ export default function DiagnosisPanel({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-base font-bold text-slate-900">🧪 Step 3: Make Your Diagnosis</p>
+        <p className="text-base font-bold text-slate-900">🧪 Step 4: Make Your Diagnosis</p>
         <p className="mt-2 text-sm text-slate-700">Based on your conversation:</p>
         <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-slate-700">
           <li>Add likely diagnoses to your differential and rank them</li>

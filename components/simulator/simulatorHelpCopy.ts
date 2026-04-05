@@ -7,60 +7,62 @@ export type HelpBlock = {
   nextStep: string
 }
 
+/** Help when browsing /scenarios (not part of the in-case progress bar). */
+export function getScenarioLibraryHelpCopy(): HelpBlock {
+  return {
+    stepName: 'Scenario library',
+    whatToDo:
+      'Browse the list and pick a patient case. Each scenario is a fictional but realistic situation to practice clinical reasoning.',
+    nextStep: 'Click a card and use “Start Case” to open the simulator.',
+  }
+}
+
 export function getSimulatorHelpCopy(
   currentStep: SimulatorStep,
   options?: { activeSection?: ClinicalSection }
 ): HelpBlock {
   const sec = options?.activeSection
 
-  if (currentStep === 1) {
+  if (currentStep === 5 || sec === 'debrief') {
     return {
-      stepName: 'Step 1: Choose Scenario',
+      stepName: 'Step 5: Your Results',
       whatToDo:
-        'Browse the case library and pick one patient scenario. Each case is a fictional but realistic situation to practice on.',
-      nextStep: 'Click a case card and press “Start Case” to open the simulator.',
+        'Read your score, strengths, areas to improve, and teaching points. Use this feedback to guide your next attempt.',
+      nextStep: 'Try the same case again to improve your score, or pick a new case from the library.',
     }
   }
 
-  if (currentStep === 2) {
-    if (sec === 'exam') {
-      return {
-        stepName: 'Step 2: Exam & workup (Physical exam)',
-        whatToDo:
-          'Review the exam sections relevant to this patient. Click through systems to read findings like you would in clinic.',
-        nextStep: 'When you have reviewed enough, open the Tests tab and order at least one test.',
-      }
-    }
-    if (sec === 'tests') {
-      return {
-        stepName: 'Step 2: Exam & workup (Tests)',
-        whatToDo:
-          'Order tests that help narrow the diagnosis. You need at least one test ordered before Diagnosis unlocks.',
-        nextStep: 'After ordering tests, go to the Diagnosis tab to build your differential and pick a final diagnosis.',
-      }
-    }
+  if (currentStep === 4 || sec === 'diagnosis') {
     return {
-      stepName: 'Step 2: Talk to the Patient',
-      whatToDo:
-        'Use Quick Questions or type your own in the chat. Your goal is to understand symptoms and key details before you move on.',
-      nextStep:
-        'Next, use the tabs to complete the physical exam and order tests. When those are done, open Diagnosis.',
-    }
-  }
-
-  if (currentStep === 3) {
-    return {
-      stepName: 'Step 3: Make Your Diagnosis',
+      stepName: 'Step 4: Diagnosis',
       whatToDo:
         'Search and add diagnoses to your differential, rank them, add short reasoning notes, and select one final diagnosis.',
       nextStep: 'Submit to generate your assessment and detailed results.',
     }
   }
 
+  if (currentStep === 3 || sec === 'tests') {
+    return {
+      stepName: 'Step 3: Order tests',
+      whatToDo:
+        'Order tests that help narrow the diagnosis. You need at least one test ordered before you can move to Diagnosis.',
+      nextStep: 'Use the button below this section to continue when you are ready.',
+    }
+  }
+
+  if (currentStep === 2 || sec === 'exam') {
+    return {
+      stepName: 'Step 2: View exams',
+      whatToDo:
+        'Review the exam sections relevant to this patient. Click through systems to read findings like you would in clinic.',
+      nextStep: 'Use the button below this section to continue to ordering tests.',
+    }
+  }
+
   return {
-    stepName: 'Step 4: Your Results',
+    stepName: 'Step 1: Chat',
     whatToDo:
-      'Read your score, strengths, areas to improve, and teaching points. Use this feedback to guide your next attempt.',
-    nextStep: 'Try the same case again to improve your score, or pick a new case from the library.',
+      'Use Quick Questions or type your own in the chat. Your goal is to understand symptoms and key details before the exam.',
+    nextStep: 'When you are ready, use the button below the chat to continue to the physical exam.',
   }
 }
