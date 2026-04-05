@@ -17,21 +17,21 @@ function statusBadge(progress?: ScenarioProgressInfo) {
   if (!progress) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
-        ⚪ Not started
+        Not started
       </span>
     )
   }
   if (progress.status === 'in_progress') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-900 border border-amber-200">
-        🟡 In progress
+        In progress
       </span>
     )
   }
   if (progress.status === 'completed') {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-900 border border-emerald-200">
-        ✅ Completed
+        Done
         {progress.bestScore != null ? (
           <span className="tabular-nums">· {progress.bestScore}</span>
         ) : null}
@@ -64,16 +64,16 @@ export default function ScenarioCard({ scenario, progress }: Props) {
           (progress.bestScore != null || progress.lastAttemptScore != null) &&
           (progress.status === 'completed' || progress.status === 'in_progress') && (
             <p className="text-xs text-slate-600 tabular-nums mb-4">
-              {progress.bestScore != null && <span>⭐ Best {progress.bestScore}</span>}
+              {progress.bestScore != null && <span>Best {progress.bestScore}</span>}
               {progress.lastAttemptScore != null && (
                 <span>
-                  {progress.bestScore != null ? ' · ' : ''}🔁 Last {progress.lastAttemptScore}
+                  {progress.bestScore != null ? ' · ' : ''}Last {progress.lastAttemptScore}
                 </span>
               )}
             </p>
           )}
         <div className="flex items-center text-primary-600 text-sm font-medium mt-auto">
-          Start Case →
+          Start case
         </div>
       </div>
     </Link>

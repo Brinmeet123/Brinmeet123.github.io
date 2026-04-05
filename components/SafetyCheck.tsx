@@ -121,7 +121,7 @@ export default function SafetyCheck({ scenario, onComplete }: Props) {
         {isUnstable && (
           <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              ⚠️ Vital signs suggest potential instability. Consider "Unstable" status.
+              Vitals suggest instability — consider marking unstable.
             </p>
           </div>
         )}

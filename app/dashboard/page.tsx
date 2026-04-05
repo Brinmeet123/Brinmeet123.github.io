@@ -51,8 +51,8 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Your dashboard</h1>
-      <p className="text-slate-600 mb-8">Overview of your progress in the Virtual Diagnostic Simulator.</p>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Dashboard</h1>
+      <p className="text-slate-600 mb-8">Progress and scores.</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
@@ -107,21 +107,21 @@ export default async function DashboardPage() {
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm divide-y divide-slate-100">
           {scenarios.map((s) => {
             const sum = summaries.get(s.id)!
-            let label = '⚪ Not started'
+            let label = 'Not started'
             let detail = ''
             if (sum.displayStatus === 'in_progress') {
-              label = '🟡 In progress'
+              label = 'In progress'
               detail = [
-                sum.bestScore != null ? `⭐ Best ${sum.bestScore}` : '',
-                sum.lastAttemptScore != null ? `🔁 Last ${sum.lastAttemptScore}` : '',
+                sum.bestScore != null ? `Best ${sum.bestScore}` : '',
+                sum.lastAttemptScore != null ? `Last ${sum.lastAttemptScore}` : '',
               ]
                 .filter(Boolean)
                 .join(' · ')
             } else if (sum.displayStatus === 'completed') {
-              label = '✅ Completed'
+              label = 'Done'
               detail = [
-                sum.bestScore != null ? `⭐ Best ${sum.bestScore}` : '',
-                sum.lastAttemptScore != null ? `🔁 Last ${sum.lastAttemptScore}` : '',
+                sum.bestScore != null ? `Best ${sum.bestScore}` : '',
+                sum.lastAttemptScore != null ? `Last ${sum.lastAttemptScore}` : '',
               ]
                 .filter(Boolean)
                 .join(' · ')

@@ -446,13 +446,13 @@ export default function ScenarioPlayerWorkflow({ scenario }: { scenario: Scenari
         <>
           {isLoadingAssessment ? (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600">Generating your comprehensive assessment...</p>
+              <p className="text-gray-600">Loading assessment…</p>
             </div>
           ) : assessment ? (
             <SummaryPanel scenario={scenario} assessment={assessment} />
           ) : (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600">No assessment available yet.</p>
+              <p className="text-gray-600">No assessment yet.</p>
             </div>
           )}
         </>

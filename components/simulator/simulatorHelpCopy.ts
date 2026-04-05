@@ -11,9 +11,8 @@ export type HelpBlock = {
 export function getScenarioLibraryHelpCopy(): HelpBlock {
   return {
     stepName: 'Scenario library',
-    whatToDo:
-      'Browse the list and pick a patient case. Each scenario is a fictional but realistic situation to practice clinical reasoning.',
-    nextStep: 'Click a card and use “Start Case” to open the simulator.',
+    whatToDo: 'Pick a case. Everything here is fictional, built for practice.',
+    nextStep: 'Open a card, then use Start Case.',
   }
 }
 
@@ -25,44 +24,39 @@ export function getSimulatorHelpCopy(
 
   if (currentStep === 5 || sec === 'debrief') {
     return {
-      stepName: 'Step 5: Your Results',
-      whatToDo:
-        'Read your score, strengths, areas to improve, and teaching points. Use this feedback to guide your next attempt.',
-      nextStep: 'Try the same case again to improve your score, or pick a new case from the library.',
+      stepName: 'Step 5: Results',
+      whatToDo: 'Read the score, rubric notes, and feedback.',
+      nextStep: 'Retry this case or pick another from the library.',
     }
   }
 
   if (currentStep === 4 || sec === 'diagnosis') {
     return {
       stepName: 'Step 4: Diagnosis',
-      whatToDo:
-        'Search and add diagnoses to your differential, rank them, add short reasoning notes, and select one final diagnosis.',
-      nextStep: 'Submit to generate your assessment and detailed results.',
+      whatToDo: 'Build a differential, rank it, add short reasoning, pick one final diagnosis.',
+      nextStep: 'Submit to load the debrief and score.',
     }
   }
 
   if (currentStep === 3 || sec === 'tests') {
     return {
-      stepName: 'Step 3: Order tests',
-      whatToDo:
-        'Order tests that help narrow the diagnosis. You need at least one test ordered before you can move to Diagnosis.',
-      nextStep: 'Use the button below this section to continue when you are ready.',
+      stepName: 'Step 3: Tests',
+      whatToDo: 'Order what you need to narrow the picture. At least one test is required before diagnosis.',
+      nextStep: 'Continue when you are set.',
     }
   }
 
   if (currentStep === 2 || sec === 'exam') {
     return {
-      stepName: 'Step 2: View exams',
-      whatToDo:
-        'Review the exam sections relevant to this patient. Click through systems to read findings like you would in clinic.',
-      nextStep: 'Use the button below this section to continue to ordering tests.',
+      stepName: 'Step 2: Exam',
+      whatToDo: 'Work through the systems and read the findings.',
+      nextStep: 'Continue to tests.',
     }
   }
 
   return {
-    stepName: 'Step 1: Chat',
-    whatToDo:
-      'Use Quick Questions or type your own in the chat. Your goal is to understand symptoms and key details before the exam.',
-    nextStep: 'When you are ready, use the button below the chat to continue to the physical exam.',
+    stepName: 'Step 1: History',
+    whatToDo: 'Use quick prompts or type in the chat.',
+    nextStep: 'Continue to the exam from the bar below the chat.',
   }
 }

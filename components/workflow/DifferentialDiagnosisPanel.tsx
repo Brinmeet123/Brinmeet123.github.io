@@ -67,13 +67,13 @@ export default function DifferentialDiagnosisPanel({ diagnosisOptions, onComplet
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <h2 className="text-2xl font-bold text-gray-900 mb-4">Step 6: Differential Diagnosis</h2>
       <p className="text-gray-600 mb-6">
-        Organize possible diagnoses into three categories. You must include at least one "Must-Not-Miss" diagnosis.
+        Sort options into three buckets. Include at least one must-not-miss diagnosis.
       </p>
 
       <div className="space-y-6">
         <div className="border-2 border-yellow-200 bg-yellow-50 rounded-lg p-4">
-          <h3 className="font-semibold text-yellow-900 mb-3">⚠️ Must-Not-Miss (Dangerous Diagnoses)</h3>
-          <p className="text-sm text-yellow-800 mb-3">Life-threatening conditions that must be ruled out</p>
+          <h3 className="font-semibold text-yellow-900 mb-3">Must-not-miss</h3>
+          <p className="text-sm text-yellow-800 mb-3">High-stakes diagnoses to rule out</p>
           <div className="space-y-2">
             {diagnosisOptions.map((option) => (
               <label

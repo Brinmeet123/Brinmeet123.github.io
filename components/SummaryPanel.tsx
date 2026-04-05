@@ -162,26 +162,8 @@ export default function SummaryPanel({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <VocabContextBlock source="debrief" scenarioId={scenario.id} text={debriefContext}>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">📊 Step 5: Your Results</h2>
-      <p className="mb-6 text-sm text-slate-600">Assessment and debrief for this case</p>
-
-      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <p className="font-semibold text-slate-900">Here&apos;s how you did:</p>
-        <ul className="mt-3 space-y-2 text-sm text-slate-700">
-          <li>
-            <span className="font-medium text-slate-900">✅ What you did well</span> — see{' '}
-            <strong>Strengths</strong> and badges below.
-          </li>
-          <li>
-            <span className="font-medium text-slate-900">⚠️ What you missed</span> — see{' '}
-            <strong>Areas for Improvement</strong> and missed history points.
-          </li>
-          <li>
-            <span className="font-medium text-slate-900">🧠 Correct diagnosis explanation</span> — see{' '}
-            <strong>Diagnosis Feedback</strong> and diagnostic reasoning.
-          </li>
-        </ul>
-      </div>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">Results</h2>
+      <p className="mb-6 text-sm text-slate-600">Score and feedback for this run.</p>
 
       {scenarioScore && (
         <>
@@ -195,7 +177,7 @@ export default function SummaryPanel({
       
       {/* Badges Section */}
       <div className="mb-6 p-4 bg-gradient-to-r from-primary-50 to-blue-50 rounded-lg border-2 border-primary-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">🏆 Badges Earned</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Badges</h3>
         {badges.length > 0 ? (
           <div className="flex flex-wrap gap-2">
             {badges.map((badge, idx) => (
@@ -208,25 +190,25 @@ export default function SummaryPanel({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-gray-600">Keep practicing to earn badges!</p>
+          <p className="text-sm text-gray-600">None this run.</p>
         )}
       </div>
 
       {/* Vocabulary Learning Section */}
       <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-3">📚 Vocabulary Learning</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">Vocabulary</h3>
         <div className="space-y-2">
           <p className="text-sm text-gray-700">
-            <strong>New terms encountered:</strong> {newTermsCount} {newTermsCount === 1 ? 'term' : 'terms'}
+            <strong>Clicked:</strong> {newTermsCount} {newTermsCount === 1 ? 'term' : 'terms'}
           </p>
           {savedTerms.length > 0 && (
             <p className="text-sm text-gray-700">
-              <strong>Terms saved:</strong> {savedTerms.length} {savedTerms.length === 1 ? 'term' : 'terms'}
+              <strong>Saved:</strong> {savedTerms.length} {savedTerms.length === 1 ? 'term' : 'terms'}
             </p>
           )}
           {recommendedTerms.length > 0 && (
             <div className="mt-3">
-              <p className="text-sm font-medium text-gray-900 mb-2">Recommended terms to review:</p>
+              <p className="text-sm font-medium text-gray-900 mb-2">Worth another look:</p>
               <div className="flex flex-wrap gap-2">
                 {recommendedTerms.map(term => {
                   const termData = getVocabTerm(term)
@@ -248,7 +230,7 @@ export default function SummaryPanel({
 
       {/* Overall Rating (no scores shown) */}
       <div className={`mb-6 p-4 rounded-lg border-2 ${ratingColors[assessment.overallRating] || ratingColors.Good}`}>
-        <p className="text-lg font-semibold">Overall Performance: {assessment.overallRating}</p>
+        <p className="text-lg font-semibold">Overall: {assessment.overallRating}</p>
       </div>
 
       <div className="mb-6">
@@ -264,7 +246,7 @@ export default function SummaryPanel({
 
       <div className="grid md:grid-cols-2 gap-6 mb-6">
         <div>
-          <h3 className="text-lg font-semibold text-green-700 mb-2">✓ Strengths</h3>
+          <h3 className="text-lg font-semibold text-green-700 mb-2">Strengths</h3>
           <ul className="list-disc list-inside space-y-1 text-gray-700">
             {assessment.strengths.map((strength, idx) => (
               <li key={idx}>
@@ -379,7 +361,7 @@ export default function SummaryPanel({
       )}
 
       <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Teaching Points</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">Teaching points</h3>
         <ul className="list-disc list-inside space-y-2 text-gray-700">
           {scenario.teachingPoints.map((point, idx) => (
             <li key={idx}>
@@ -394,7 +376,7 @@ export default function SummaryPanel({
       </div>
 
       <div className="mt-8 rounded-xl border border-primary-200 bg-primary-50/60 p-5">
-        <p className="font-semibold text-slate-900">👉 What next?</p>
+        <p className="font-semibold text-slate-900">Next</p>
         <div className="mt-4 flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
@@ -403,13 +385,13 @@ export default function SummaryPanel({
             }}
             className="flex-1 rounded-lg border border-primary-300 bg-white px-4 py-3 text-center text-sm font-semibold text-primary-800 shadow-sm transition hover:bg-primary-50"
           >
-            Try Again (Improve Score)
+            Retry case
           </button>
           <Link
             href="/scenarios"
             className="flex-1 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
           >
-            Try New Case
+            Another case
           </Link>
         </div>
       </div>

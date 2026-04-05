@@ -94,10 +94,10 @@ export default function GuidedChecklist({ onItemComplete }: Props) {
   return (
     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
       <h3 className="text-lg font-semibold text-blue-900 mb-3">
-        📋 History Checklist (OPQRST + More)
+        History checklist (OPQRST+)
       </h3>
-      <p className="text-sm text-blue-700 mb-4">
-        Use this checklist to make sure you ask about all the important areas. Check off items as you cover them.
+      <p className="text-sm text-blue-800/90 mb-4">
+        Check items off as you cover them.
       </p>
 
       <div className="space-y-2">

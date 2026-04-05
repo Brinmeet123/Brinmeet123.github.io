@@ -154,7 +154,7 @@ function welcomeHtml(displayName: string): string {
   <body style="font-family: system-ui, sans-serif; line-height: 1.5; color: #1e293b;">
     <h1 style="color: #0f766e;">Welcome${displayName ? `, ${escapeHtml(displayName)}` : ''}!</h1>
     <p>Thank you for joining the <strong>Virtual Diagnostic Simulator</strong>.</p>
-    <p>You can save medical vocabulary from scenarios and track your scores on your dashboard as you practice.</p>
+    <p>Your saved terms and scenario scores live on your dashboard.</p>
     <p>We will also share occasional updates about new cases and—down the road—shadowing and observation opportunities.</p>
     <p style="margin-top: 24px; font-size: 14px; color: #64748b;">— The VDS team</p>
   </body>
@@ -167,7 +167,7 @@ function welcomePlainText(displayName: string): string {
 
 Thank you for joining the Virtual Diagnostic Simulator.
 
-You can save medical vocabulary from scenarios and track your scores on your dashboard as you practice.
+Your saved terms and scenario scores live on your dashboard.
 
 We will also share occasional updates about new cases and—down the road—shadowing and observation opportunities.
 

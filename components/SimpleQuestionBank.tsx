@@ -19,8 +19,8 @@ const coreQuestions = [
 export default function SimpleQuestionBank({ onInsertQuestion }: Props) {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-1">📌 Quick Questions (Click to Ask)</h3>
-      <p className="text-xs text-gray-600 mb-3">Sends immediately to the patient</p>
+      <h3 className="text-sm font-semibold text-gray-900 mb-1">Quick questions</h3>
+      <p className="text-xs text-gray-500 mb-3">Tap to send</p>
       <div className="grid grid-cols-1 gap-1.5">
         {coreQuestions.map((question, idx) => (
           <button

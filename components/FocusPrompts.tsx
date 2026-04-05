@@ -70,7 +70,7 @@ export default function FocusPrompts({ onInsertQuestion }: Props) {
 
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">History Focus</h3>
+      <h3 className="text-sm font-medium text-gray-700 mb-3">Themes</h3>
       <div className="space-y-2">
         {focusPrompts.map(prompt => {
           const isExpanded = expanded.has(prompt.id)

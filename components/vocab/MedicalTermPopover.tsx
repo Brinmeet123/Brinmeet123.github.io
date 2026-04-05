@@ -191,7 +191,7 @@ export default function MedicalTermPopover({
                 : 'bg-primary-600 text-white hover:bg-primary-700'
           }`}
         >
-          {isSaving ? 'Saving…' : isSaved ? '✓ In My Vocab' : '⭐ Save to Vocab'}
+          {isSaving ? 'Saving…' : isSaved ? 'Saved' : 'Save term'}
         </button>
         <button
           type="button"

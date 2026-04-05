@@ -7,10 +7,8 @@ export default function LoginPage() {
     <div className="min-h-[calc(100vh-12rem)] flex flex-col items-center justify-center px-4 py-12">
       <div className="w-full max-w-lg">
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome back</h1>
-          <p className="text-slate-600 mt-2">
-            Sign in to save vocabulary, track scenario scores, and view your dashboard.
-          </p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Sign in</h1>
+          <p className="text-slate-600 mt-2">Saved vocab, scores, and dashboard sync to your account.</p>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xl shadow-slate-200/50 p-8 md:p-10">
@@ -21,7 +19,7 @@ export default function LoginPage() {
 
         <p className="text-center text-sm text-slate-500 mt-8">
           <Link href="/" className="text-teal-700 hover:text-teal-800 font-medium">
-            ← Back to home
+            Home
           </Link>
         </p>
       </div>

@@ -191,7 +191,14 @@ export default function DifferentialDiagnosisBuilder({ diagnosisOptions, onCompl
 
       <div className="mt-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
         <p className="text-sm text-yellow-800">
-          Requirements: {hasDangerous ? '✓' : '✗'} At least 1 dangerous diagnosis, {hasEnough ? '✓' : '✗'} At least 3 total diagnoses
+          {hasDangerous && hasEnough
+            ? 'Requirements met.'
+            : `Still need: ${[
+                !hasDangerous ? 'one dangerous diagnosis' : null,
+                !hasEnough ? 'at least three diagnoses total' : null,
+              ]
+                .filter(Boolean)
+                .join('; ')}.`}
         </p>
       </div>
 
@@ -200,7 +207,7 @@ export default function DifferentialDiagnosisBuilder({ diagnosisOptions, onCompl
         disabled={!hasDangerous || !hasEnough}
         className="w-full mt-4 px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
       >
-        Continue to Diagnostic Plan
+        Continue
       </button>
     </div>
   )

@@ -147,18 +147,9 @@ export default function DiagnosisPanel({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-5">
-        <p className="text-base font-bold text-slate-900">🧪 Step 4: Make Your Diagnosis</p>
-        <p className="mt-2 text-sm text-slate-700">Based on your conversation:</p>
-        <ol className="mt-2 list-inside list-decimal space-y-1 text-sm text-slate-700">
-          <li>Add likely diagnoses to your differential and rank them</li>
-          <li>Add reasoning notes (why you think each possibility fits)</li>
-          <li>Select one final diagnosis from your list</li>
-        </ol>
-        <p className="mt-3 text-sm text-slate-600">
-          💡 Be specific — this affects your score
-        </p>
-      </div>
+      <p className="mb-4 text-sm text-slate-500">
+        Differential detail and final pick feed the rubric.
+      </p>
 
       <h2 className="text-lg font-semibold text-gray-900 mb-4">Diagnosis</h2>
       
@@ -272,7 +263,7 @@ export default function DiagnosisPanel({
           
           {missingMustNotMiss.length > 0 && (
             <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm text-yellow-800 font-medium mb-1">💡 Consider These Must-Not-Miss Diagnoses:</p>
+              <p className="text-sm text-yellow-800 font-medium mb-1">Must-not-miss to consider:</p>
               <p className="text-xs text-yellow-700 mb-2">
                 These are dangerous diagnoses that should be considered in your differential, even if you rule them out. Good clinical practice requires evaluating them for chest pain cases.
               </p>
@@ -371,9 +362,9 @@ export default function DiagnosisPanel({
 
       {/* Final Diagnosis */}
       <div className="mt-6 border-t border-gray-200 pt-6">
-        <h3 className="text-md font-semibold text-gray-900 mb-4">Final Diagnosis (select one from your differential)</h3>
+        <h3 className="text-md font-semibold text-gray-900 mb-4">Final diagnosis</h3>
         {differential.length === 0 ? (
-          <p className="text-sm text-gray-500">Add diagnoses to your differential first.</p>
+          <p className="text-sm text-gray-500">Add diagnoses to the differential first.</p>
         ) : (
           <div className="space-y-2">
             {sortedDifferential.map((item) => {
@@ -416,7 +407,7 @@ export default function DiagnosisPanel({
         disabled={!finalDxId || differential.length === 0}
         className="w-full mt-6 px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
       >
-        Submit Diagnosis & See Results
+        Submit & view results
       </button>
     </div>
   )

@@ -1,6 +1,6 @@
 'use client'
 
-/** In-case flow: Chat → Exam → Tests → Diagnosis → Results */
+/** In-case flow: Chat, exam, tests, diagnosis, results */
 export type SimulatorStep = 1 | 2 | 3 | 4 | 5
 
 const STEPS: { step: SimulatorStep; label: string }[] = [
@@ -24,7 +24,7 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
       aria-label="Simulator progress"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Your progress</p>
+        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Progress</p>
         <ol className="flex max-w-full flex-wrap items-center gap-x-1 gap-y-2 overflow-x-auto pb-0.5 text-xs sm:text-sm">
           {STEPS.map(({ step, label }, idx) => {
             const isCurrent = step === currentStep
@@ -33,7 +33,7 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
               <li key={step} className="flex items-center gap-1">
                 {idx > 0 && (
                   <span className="mx-0.5 text-slate-300 select-none" aria-hidden>
-                    →
+                    /
                   </span>
                 )}
                 <span

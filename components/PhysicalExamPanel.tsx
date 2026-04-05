@@ -54,7 +54,7 @@ export default function PhysicalExamPanel({ sections, scenarioId, viewedSections
               >
                 <p className="font-medium text-sm">{section.label}</p>
                 {isViewed && (
-                  <p className="text-xs text-primary-600 mt-1">✓ Viewed</p>
+                  <p className="text-xs text-primary-600 mt-1">Opened</p>
                 )}
               </button>
               {isExpanded && (

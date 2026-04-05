@@ -61,10 +61,10 @@ export default function QuestionBank({ onInsertQuestion }: Props) {
   return (
     <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
       <h3 className="text-lg font-semibold text-green-900 mb-3">
-        💬 Doctor Question Templates
+        Question templates
       </h3>
-      <p className="text-sm text-green-700 mb-4">
-        Click a question to insert it into the chat. You can edit it before sending.
+      <p className="text-sm text-green-800/90 mb-4">
+        Inserts into chat; edit before send if you want.
       </p>
       
       <div className="space-y-4">

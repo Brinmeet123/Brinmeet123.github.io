@@ -26,8 +26,7 @@ export default function SimulatorHelpButton(props: Props) {
         aria-expanded={open}
         aria-controls="simulator-help-panel"
       >
-        <span aria-hidden>❓</span>
-        Need Help?
+        Help
       </button>
 
       {open && (
@@ -46,16 +45,16 @@ export default function SimulatorHelpButton(props: Props) {
             className="relative z-10 m-4 w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
           >
             <h2 id="simulator-help-title" className="text-lg font-bold text-slate-900">
-              Need Help?
+              Help
             </h2>
-            <p className="mt-1 text-sm text-slate-600">You are currently on: {stepName}</p>
+            <p className="mt-1 text-sm text-slate-600">{stepName}</p>
             <div className="mt-4 space-y-4 text-sm text-slate-700">
               <div>
-                <p className="font-semibold text-slate-900">What to do:</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Now</p>
                 <p className="mt-1 leading-relaxed">{whatToDo}</p>
               </div>
               <div>
-                <p className="font-semibold text-slate-900">Next step:</p>
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">After</p>
                 <p className="mt-1 leading-relaxed">{nextStep}</p>
               </div>
             </div>
@@ -64,7 +63,7 @@ export default function SimulatorHelpButton(props: Props) {
               onClick={() => setOpen(false)}
               className="mt-6 w-full rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-700"
             >
-              Got it
+              Close
             </button>
           </div>
         </div>

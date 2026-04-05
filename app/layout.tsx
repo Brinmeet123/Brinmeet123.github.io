@@ -6,7 +6,7 @@ import RootLoadingFallback from '@/components/RootLoadingFallback'
 
 export const metadata: Metadata = {
   title: 'Virtual Diagnostic Simulator',
-  description: 'Step into the role of a doctor. Interview AI patients, choose tests, and practice clinical reasoning — safely and fictionally.',
+  description: 'Fictional clinical cases: history, exam, tests, diagnosis, and debrief — for training only.',
 }
 
 /**

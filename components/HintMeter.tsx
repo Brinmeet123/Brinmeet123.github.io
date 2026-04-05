@@ -72,7 +72,7 @@ export default function HintMeter({ scenario, messages }: Props) {
 
   return (
     <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 mb-6">
-      <h3 className="text-xs font-medium text-blue-900 mb-2">Progress Hints</h3>
+      <h3 className="text-xs font-medium text-blue-900 mb-2">Coverage</h3>
       <div className="space-y-1.5">
         {hints.map((hint, idx) => (
           <div key={idx} className="flex items-center justify-between text-xs">

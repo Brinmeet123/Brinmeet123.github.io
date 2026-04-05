@@ -99,10 +99,10 @@ export default function QuizPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Vocabulary Quiz</h1>
-          <p className="text-gray-600 mb-6">Save a few terms from scenarios first, then come back to practice.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Quiz</h1>
+          <p className="text-gray-600 mb-6">Save a few terms from scenarios first.</p>
           <Link href="/vocab" className="inline-block px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition">
-            Go to My Vocabulary
+            Vocabulary
           </Link>
         </div>
       </div>
@@ -113,8 +113,8 @@ export default function QuizPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-12 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Vocabulary Quiz</h1>
-          <p className="text-gray-600 mb-6">Preparing questions…</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Quiz</h1>
+          <p className="text-gray-600 mb-6">Preparing…</p>
         </div>
       </div>
     )
@@ -125,11 +125,11 @@ export default function QuizPage() {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900 mb-4">Quiz complete</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-4">Done</h1>
           <div className="mb-6">
             <p className="text-5xl font-bold text-primary-600 mb-2">{percentage}%</p>
             <p className="text-lg text-gray-700">
-              You got {score} out of {questions.length} correct.
+              {score}/{questions.length} correct.
             </p>
           </div>
           <div className="flex gap-4 justify-center flex-wrap">
@@ -141,7 +141,7 @@ export default function QuizPage() {
               New quiz
             </button>
             <Link href="/vocab" className="px-6 py-3 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 transition">
-              Back to vocabulary
+              Vocabulary
             </Link>
           </div>
         </div>
@@ -155,7 +155,7 @@ export default function QuizPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6 flex justify-between items-center flex-wrap gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">Vocabulary quiz</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Quiz</h1>
       </div>
 
       <div className="mb-6">

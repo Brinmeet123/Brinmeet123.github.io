@@ -80,8 +80,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   const runPatientTurn = useCallback(
     async (newMessages: Message[], source: 'preset' | 'custom') => {
       isLoadingRef.current = true
-      if (source === 'preset') showHint('✅ Question sent to patient')
-      else showHint('👍 Custom question asked')
+      showHint('Sent.')
 
       setIsLoading(true)
       try {
@@ -98,10 +97,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
           if (shouldFallbackToPatientMocks()) {
             const mockMessage = getMockPatientResponse(scenario.id, newMessages)
             setMessages([...newMessages, { role: 'patient', content: mockMessage }])
-            {
-              const pool = ['👍 Good question!', '📈 That helped narrow the diagnosis']
-              showHint(pool[Math.floor(Math.random() * pool.length)])
-            }
+            showHint('Reply received.')
             return
           }
           let detail = `${response.status} ${response.statusText}`
@@ -126,7 +122,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
             ...newMessages,
             {
               role: 'patient',
-              content: `⚠️ The AI chat service failed.\n\n${detail}\n\n${hint}`,
+              content: `Chat service unavailable.\n\n${detail}\n\n${hint}`,
             },
           ])
           return
@@ -137,7 +133,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
         if (data.error) {
           let errorMsg = data.error
           if (data.demoModeAvailable) {
-            errorMsg += `\n\n💡 ${data.demoModeAvailable}`
+            errorMsg += `\n\n${data.demoModeAvailable}`
           }
           throw new Error(errorMsg)
         }
@@ -148,19 +144,13 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
 
         const patientMessage: Message = { role: 'patient', content: data.message }
         setMessages([...newMessages, patientMessage])
-        {
-          const pool = ['👍 Good question!', '📈 That helped narrow the diagnosis']
-          showHint(pool[Math.floor(Math.random() * pool.length)])
-        }
+        showHint('Reply received.')
       } catch (error: any) {
         if (error?.message?.includes('Failed to fetch') || error?.message?.includes('Load failed')) {
           if (shouldFallbackToPatientMocks()) {
             const mockMessage = getMockPatientResponse(scenario.id, newMessages)
             setMessages([...newMessages, { role: 'patient', content: mockMessage }])
-            {
-              const pool = ['👍 Good question!', '📈 That helped narrow the diagnosis']
-              showHint(pool[Math.floor(Math.random() * pool.length)])
-            }
+            showHint('Reply received.')
             return
           }
           setMessages([
@@ -168,30 +158,30 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
             {
               role: 'patient',
               content:
-                '⚠️ Could not reach the server. If you are on Vercel, confirm the deployment finished and try again.',
+                'Could not reach the server. If you are on Vercel, wait for the deploy to finish and try again.',
             },
           ])
           return
         }
         console.error('Error in ChatPanel:', error)
 
-        let errorContent = "I'm sorry, I'm having trouble responding right now. Could you try again?"
+        let errorContent = "Can't respond right now. Try again."
 
         if (error?.message) {
           const errorMsg = error.message.toLowerCase()
           if (errorMsg.includes('ollama') || errorMsg.includes('econnrefused')) {
             errorContent =
-              '⚠️ **Ollama** not reachable. Run `ollama serve`, pull a model (`ollama pull llama3.2`), and check **OLLAMA_BASE_URL** in `.env.local`. Try **/api/test-key**.'
+              '**Ollama** not reachable. Run `ollama serve`, pull a model, set **OLLAMA_BASE_URL** in `.env.local`. See **/api/test-key**.'
           } else if (errorMsg.includes('rate limit')) {
-            errorContent = '⚠️ Error: Rate limit or overload. Try again shortly or use a smaller model.'
+            errorContent = 'Rate limited or overloaded. Retry shortly or use a smaller model.'
           } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
             errorContent =
-              '⚠️ Error: Network error. Check Ollama is running and the server can reach OLLAMA_BASE_URL.'
+              'Network error. Confirm Ollama is up and **OLLAMA_BASE_URL** is reachable.'
           } else if (errorMsg.includes('demo_mode') || errorMsg.includes('no llm')) {
             errorContent =
-              '⚠️ Error: Set **DEMO_MODE=true** for mocks, or run Ollama for real responses.'
+              'Set **DEMO_MODE=true** for mocks, or run Ollama.'
           } else {
-            errorContent = `⚠️ Error: ${error.message}`
+            errorContent = `Error: ${error.message}`
           }
         }
 
@@ -287,7 +277,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
         {isLoading && (
           <div className="flex justify-start">
             <div className="bg-gray-100 rounded-lg px-4 py-2">
-              <p className="text-sm text-gray-500">Patient is typing...</p>
+              <p className="text-sm text-gray-500">Typing…</p>
             </div>
           </div>
         )}
@@ -308,7 +298,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Type your own question here (optional)"
+          placeholder="Your question"
           className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           disabled={isLoading}
         />

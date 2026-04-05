@@ -15,6 +15,7 @@ import SectionNav, { ClinicalSection } from './SectionNav'
 import HistoryHelperPanel from './HistoryHelperPanel'
 import SimulatorProgressBar from './simulator/SimulatorProgressBar'
 import SimulatorHelpButton from './simulator/SimulatorHelpButton'
+import SimulatorStepInstruction from './simulator/SimulatorStepInstruction'
 import type { SimulatorStep } from './simulator/SimulatorProgressBar'
 
 type Message = {
@@ -345,7 +346,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
       setAssessment({
         overallRating: 'Error',
         summary:
-          'There was an error generating your assessment. Run Ollama (ollama serve) or set DEMO_MODE=true for mocks.',
+          'Assessment failed to load. For local dev: run Ollama or set DEMO_MODE=true.',
         strengths: [],
         areasForImprovement: [errorMessage],
         diagnosisFeedback: '',
@@ -382,9 +383,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
   /** Readiness for Step 1 (chat) only — next action is always the physical exam. */
   const chatReadiness = (() => {
     if (doctorTurns < 3) {
-      return { ok: false, text: '🟡 Ask a few more questions before continuing' }
+      return { ok: false, text: 'A few more questions before the exam.' }
     }
-    return { ok: true, text: '🟢 Ready to continue to the physical exam' }
+    return { ok: true, text: 'Ready to continue.' }
   })()
 
   const sections = [
@@ -407,13 +408,13 @@ export default function ScenarioPlayer({ scenario }: Props) {
       id: 'diagnosis' as ClinicalSection,
       label: 'Diagnosis',
       disabled: !canAccessDiagnosis,
-      disabledReason: 'Complete the Exam and order at least one Test before moving to Diagnosis.',
+      disabledReason: 'Finish the exam and order at least one test first.',
     },
     {
       id: 'debrief' as ClinicalSection,
       label: 'Debrief',
       disabled: !canAccessDebrief,
-      disabledReason: 'Select a final diagnosis before viewing the debrief.',
+      disabledReason: 'Submit a final diagnosis first.',
     },
   ]
 
@@ -472,23 +473,11 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {/* Render only the active section */}
       {activeSection === 'history' && (
         <>
-          <div className="mb-4 rounded-xl border border-slate-200/90 bg-slate-50/95 p-4 shadow-sm">
-            <div className="rounded-lg border border-primary-100 bg-white/90 p-4 text-sm leading-relaxed text-slate-800">
-              <p className="font-bold text-slate-900">🧠 Step 1: Talk to the Patient</p>
-              <p className="mt-2">
-                Choose a question below <span className="font-medium">or</span> type your own.
-              </p>
-              <ul className="mt-2 list-inside list-disc space-y-1 text-slate-700">
-                <li>Click a question → it sends automatically</li>
-                <li>Or type your own like a real doctor</li>
-              </ul>
-              <p className="mt-3 font-medium text-slate-900">Your goal:</p>
-              <p className="mt-1">→ Understand symptoms → Gather key details → Figure out the diagnosis</p>
-              <p className="mt-3 font-medium text-primary-800">
-                👉 When you are done chatting, scroll down and use Continue to go to the physical exam.
-              </p>
-            </div>
-          </div>
+          <SimulatorStepInstruction
+            title="Step 1: History"
+            description="Start with a quick question or type your own."
+            footerHint="Continue to the exam when you are ready."
+          />
 
           <DoctorPatientScene patientName={scenario.patientPersona.name} onPatientClick={scrollToChat} />
           
@@ -585,7 +574,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
               onClick={() => setActiveSection('exam')}
               className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
             >
-              Continue to Physical Exam →
+              Continue to exam
             </button>
           </div>
         </>
@@ -593,6 +582,11 @@ export default function ScenarioPlayer({ scenario }: Props) {
 
       {activeSection === 'exam' && (
         <>
+          <SimulatorStepInstruction
+            title="Step 2: Exam"
+            description="Open each system and read the findings."
+            footerHint="Continue to tests when you are set."
+          />
           <PhysicalExamPanel
             sections={scenario.physicalExam}
             scenarioId={scenario.id}
@@ -607,7 +601,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
               onClick={() => setActiveSection('tests')}
               className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
             >
-              Continue to Order Tests →
+              Continue to tests
             </button>
           </div>
         </>
@@ -615,6 +609,11 @@ export default function ScenarioPlayer({ scenario }: Props) {
 
       {activeSection === 'tests' && (
         <>
+          <SimulatorStepInstruction
+            title="Step 3: Tests"
+            description="Order what you need. You need at least one test before diagnosis."
+            footerHint="Continue to diagnosis after you order."
+          />
           <TestsPanel
             scenario={scenario}
             orderedTests={orderedTests}
@@ -625,7 +624,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
           <div className="mt-6 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
             {!canAccessDiagnosis && (
               <p className="text-sm text-amber-800">
-                View at least one physical exam section and order at least one test to unlock diagnosis.
+                Open an exam section and order at least one test to unlock diagnosis.
               </p>
             )}
             <button
@@ -635,34 +634,41 @@ export default function ScenarioPlayer({ scenario }: Props) {
               title={
                 canAccessDiagnosis
                   ? undefined
-                  : 'Complete the exam and order at least one test first.'
+                  : 'Exam + at least one test required.'
               }
               className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Continue to Diagnosis →
+              Continue to diagnosis
             </button>
           </div>
         </>
       )}
 
       {activeSection === 'diagnosis' && (
-        <DiagnosisPanel 
-          scenario={scenario} 
-          differential={differential}
-          finalDxId={finalDiagnosisId}
-          onDifferentialUpdate={handleDifferentialUpdate}
-          onFinalDxUpdate={handleFinalDxUpdate}
-          onSubmit={handleDiagnosisSubmit}
-          onTermClick={handleTermClick}
-          onTermSave={handleTermSave}
-        />
+        <>
+          <SimulatorStepInstruction
+            title="Step 4: Diagnosis"
+            description="Build your differential, then pick one final diagnosis."
+            footerHint="Submit below for debrief and score."
+          />
+          <DiagnosisPanel
+            scenario={scenario}
+            differential={differential}
+            finalDxId={finalDiagnosisId}
+            onDifferentialUpdate={handleDifferentialUpdate}
+            onFinalDxUpdate={handleFinalDxUpdate}
+            onSubmit={handleDiagnosisSubmit}
+            onTermClick={handleTermClick}
+            onTermSave={handleTermSave}
+          />
+        </>
       )}
 
       {activeSection === 'debrief' && (
         <>
           {isLoadingAssessment ? (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600">Generating your assessment...</p>
+              <p className="text-gray-600">Loading assessment…</p>
             </div>
           ) : assessment ? (
             <SummaryPanel 
@@ -676,7 +682,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
             />
           ) : (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600">No assessment available yet.</p>
+              <p className="text-gray-600">No assessment yet.</p>
             </div>
           )}
         </>

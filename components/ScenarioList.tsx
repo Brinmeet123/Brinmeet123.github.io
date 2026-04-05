@@ -38,7 +38,7 @@ export default function ScenarioList({ scenarios, progressByScenario = {} }: Pro
       <SimulatorHelpButton libraryPage />
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">Scenario Library</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-6">Scenarios</h1>
         
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
           <div className="flex-1">
@@ -83,7 +83,7 @@ export default function ScenarioList({ scenarios, progressByScenario = {} }: Pro
 
       {filteredScenarios.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-500">No scenarios match your filters.</p>
+          <p className="text-gray-500">No cases match these filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

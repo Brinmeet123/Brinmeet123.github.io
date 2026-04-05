@@ -156,7 +156,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'feeling-open',
         answer:
-          "I'm honestly pretty frightened. There's this heavy, squeezing feeling right in the center of my chest, kind of behind my breastbone, and it's spreading into my left arm and up toward my jaw. I'm drenched in sweat, I feel sick to my stomach, and I can't get a good breath. It all started when I was walking up the stairs at work — maybe 30 minutes ago — and it hasn't let up.",
+          "I started having this really heavy pressure in the middle of my chest about 30 minutes ago while I was walking upstairs. It hasn’t gone away, and I feel kind of short of breath and sweaty. It just feels really intense and different from anything I’ve had before.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
@@ -184,7 +184,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'quality',
         answer:
-          "It's not a little pinch — it's a deep, heavy pressure, like someone's standing on my chest. Kind of crushing. I wouldn't call it stabbing; it's more squeezing, and it feels really wrong.",
+          "It feels like a heavy, crushing pressure right in my chest, almost like something is sitting on it. It’s not sharp, more like a deep squeezing feeling. It’s pretty constant and really uncomfortable.",
         patterns: [
           'what does it feel like',
           'what kind of pain is it',
@@ -198,7 +198,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'onset',
         answer:
-          "It started about 30 minutes ago while I was walking up the stairs — not sprinting, just normal steps. I had to stop and lean on the railing. Before that I felt fine.",
+          "It started about 30 minutes ago when I was going up the stairs. It came on pretty suddenly and hasn’t improved since then. It’s been constant the whole time.",
         patterns: [
           'when did this start',
           'when did it start',
@@ -211,7 +211,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'trajectory',
         answer:
-          "If anything it's gotten worse — or at least it hasn't gotten better. I'm not someone who runs to the ER, but this feels like it's ramping up, not fading.",
+          "It’s been pretty constant, maybe getting a little worse over time. It definitely hasn’t gotten better at all. If anything, it feels more intense now than when it first started.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
@@ -224,7 +224,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'location',
         answer:
-          "It's mostly right in the center of my chest, kind of behind my breastbone. It feels deep — not like a skin thing or a pulled muscle on the side. That's where the worst of it is.",
+          "It’s right in the center of my chest, kind of behind my breastbone. It feels deep inside, not like something on the surface. That’s where it’s strongest.",
         patterns: [
           'where exactly do you feel it',
           'where is the pain',
@@ -239,7 +239,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'radiation',
         answer:
-          "Yeah — it goes into my left arm, kind of heavy and achy, and I also feel it up along my jaw on the left. It's not just one tiny dot; it spreads.",
+          "Yeah, I feel it going into my left arm and sometimes up into my jaw. It’s not as strong there, but it definitely spreads. That’s what really worried me.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
@@ -253,7 +253,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "Yes to all of that — I'm short of breath even when I try to slow my breathing down, I feel nauseous like I might throw up, and I've been sweating through my shirt. Clammy, cold sweat.",
+          "Yes, I feel short of breath and a bit nauseous. I’ve also been sweating a lot even though I’m not doing anything right now. It all came on around the same time as the chest pain.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
@@ -266,7 +266,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'worse',
         answer:
-          "Walking and any exertion make it worse — that's how it started. Even talking too much right now winds me. Nothing has really made it go away; sitting and trying to calm down helps a tiny bit, but not much.",
+          "It seemed to start when I was exerting myself, like walking upstairs. Moving around doesn’t help, and it still hurts even when I sit still. Nothing I’ve done has made it better.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
@@ -294,7 +294,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'past-medical',
         answer:
-          "I've got high blood pressure and my cholesterol runs high — my doctor's been on me about diet and meds for years. No diabetes that I know of. This isn't from a fall or anything; I didn't injure my chest.",
+          "I have high blood pressure and high cholesterol. I’ve been told to watch my heart because of that. I’ve been dealing with those for a few years now.",
         patterns: [
           'do you have any medical conditions',
           'any past medical history',
@@ -308,7 +308,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medications',
         answer:
-          "I'm supposed to take something for blood pressure and a statin for cholesterol — honestly I miss doses more than I should, especially when work gets busy. I don't take a bunch of other pills regularly.",
+          "I take medication for my blood pressure, but I’ll admit I don’t always take it consistently. I’m not on anything else regularly. I don’t have any allergies that I know of.",
         patterns: [
           'do you take any medications',
           'what meds do you take',
@@ -428,7 +428,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'feeling-open',
         answer:
-          "I'm completely miserable. About an hour ago I got this sudden, explosive headache all over my head — the worst I've ever had. My neck is stiff and hurts to move, bright lights make me want to scream, and I've been nauseous with fever and chills. I feel weak and shaky. I was just resting when it hit — no injury, nothing.",
+          "I suddenly got this really intense headache about an hour ago, and it came on really fast. It’s been getting worse, and my neck feels stiff too. I also feel kind of nauseous and sensitive to light.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
@@ -454,7 +454,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'quality',
         answer:
-          "It's a violent pounding, throbbing pain — my whole head feels like it's going to burst. Not like a little tension headache; it's 10 out of 10 and constant.",
+          "It feels like a severe, pounding pain all over my head. It’s not just one spot, it’s kind of everywhere. It’s honestly one of the worst headaches I’ve ever had.",
         patterns: [
           'what does it feel like',
           'what kind of pain is it',
@@ -467,7 +467,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'onset',
         answer:
-          "It started suddenly about an hour ago — I can pretty much tell you the minute it began. Max pain almost right away. I wasn't doing anything strenuous.",
+          "It started about an hour ago, very suddenly. I wasn’t doing anything unusual when it happened. It just came on out of nowhere.",
         patterns: [
           'when did this start',
           'when did it start',
@@ -480,7 +480,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'trajectory',
         answer:
-          "It's not getting better — if anything I'm more light-sensitive and my neck feels tighter. This isn't fading like a normal headache.",
+          "It’s definitely been getting worse since it started. It hasn’t improved at all. The pain just keeps building.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
@@ -493,7 +493,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'location',
         answer:
-          "It's all over — I can't point to one little spot. Front, sides, top — everywhere. The neck stiffness makes it feel connected up and down my spine.",
+          "It feels like it’s all over my head, not just one side. It’s kind of a whole-head pain. My neck also hurts and feels really stiff.",
         patterns: [
           'where exactly do you feel it',
           'where is the pain',
@@ -507,7 +507,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'radiation',
         answer:
-          "It doesn't really travel like pain shooting down an arm or leg — it's more my whole head and my neck. The neck stiffness is the worst besides the headache itself.",
+          "It doesn’t really travel like arm or leg pain would. It just feels like my whole head is affected, and my neck is really stiff too. It all kind of feels connected.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
@@ -521,7 +521,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "I'm not really short of breath. I am nauseous — haven't vomited yet but I feel like I could. I've had sweats and chills with feeling feverish.",
+          "I do feel nauseous, but I haven’t really noticed shortness of breath. I’ve had some chills along with the headache. The nausea seems to come and go.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
@@ -534,7 +534,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'worse',
         answer:
-          "Bright lights and noise make it unbearable. Moving my neck makes it worse. Lying still in a dark, quiet room helps a little — not a cure, but a little.",
+          "Bright lights definitely make it worse, and moving my head is uncomfortable. It feels worse when I try to sit up or look around. I just want to lie still.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
@@ -547,7 +547,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'past-medical',
         answer:
-          "I've been healthy overall — no high blood pressure that I know of, no diabetes. I don't have a long list of medical problems. This headache is new and terrifying.",
+          "I don’t really have any major medical problems. I’ve never had headaches like this before. I’m generally pretty healthy.",
         patterns: [
           'do you have any medical conditions',
           'any past medical history',
@@ -560,7 +560,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medications',
         answer:
-          "I don't take daily prescriptions — maybe ibuprofen here and there for period cramps, but nothing regular. I haven't taken anything that's touched this pain.",
+          "I don’t take any regular medications. I might take something like ibuprofen occasionally, but nothing daily. I don’t have any known allergies.",
         patterns: [
           'do you take any medications',
           'what meds do you take',
@@ -676,7 +676,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'feeling-open',
         answer:
-          "I'm really struggling — I suddenly couldn't catch my breath today. It feels like there's a tight band around my chest and I can't get a full breath in, like I'm smothering. I'm a little clammy. I had a long flight not long ago and I've been sitting a lot, and now that you ask, one calf has felt heavier than the other. I'm on blood pressure and cholesterol meds from my doctor.",
+          "I suddenly started feeling really short of breath earlier today. It feels like I can’t get enough air in, even when I try to take deep breaths. It’s making me a bit anxious because it came on so quickly.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
@@ -702,7 +702,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'quality',
         answer:
-          "It's not really a sharp stabbing pain — it's air hunger. I feel like I'm working hard to breathe and I can't finish a breath. There's a dull ache or tightness in my chest when I try to take a deep breath.",
+          "It feels like tightness in my chest and like I’m not getting enough air. I keep trying to take deep breaths, but it doesn’t feel satisfying. It’s not really pain, more like pressure and difficulty breathing.",
         patterns: [
           'what does it feel like',
           'what kind of pain is it',
@@ -716,7 +716,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'onset',
         answer:
-          "It started suddenly today — I can't pin it to one exact minute, but it came on fast, not over weeks. I've been getting worse since it started.",
+          "It started suddenly today, not gradually. One moment I was fine, and then I just felt like I couldn’t breathe properly. It’s been going on since then.",
         patterns: [
           'when did this start',
           'when did it start',
@@ -729,7 +729,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'trajectory',
         answer:
-          "I haven't turned the corner — it's been pretty steady bad, maybe a little worse the more I move. I'm not back to baseline at all.",
+          "It’s stayed about the same or maybe slightly worse. It definitely hasn’t improved. I still feel pretty uncomfortable.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
@@ -742,7 +742,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'location',
         answer:
-          "It's not really one spot of pain like a bee sting — it's more my whole chest feels tight and I can't expand my lungs all the way. Like I'm breathing through a straw.",
+          "It’s not really in one spot like pain would be. It feels like my whole chest is tight. The main issue is just not being able to breathe well.",
         patterns: [
           'where exactly do you feel it',
           'where do you feel it',
@@ -755,7 +755,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'radiation',
         answer:
-          "The breathing problem doesn't shoot down my arm like you hear about with a heart attack — it's centered in my chest and my breathing. My leg bothering me is separate — one calf feels tight or swollen.",
+          "It doesn’t really spread anywhere. It’s mostly just in my chest with the breathing problem. I haven’t noticed it going into my arms or anything like that.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
@@ -768,7 +768,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "The main thing is I'm short of breath — that's why I'm here. I'm not really nauseous. I have felt clammy and a little sweaty, like when you're panicking.",
+          "I definitely feel short of breath, that’s the main issue. I haven’t really felt nauseous, but I do feel a bit uneasy. I haven’t noticed much sweating.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
@@ -781,7 +781,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'worse',
         answer:
-          "Walking across the room, going to the bathroom — anything that gets my heart rate up makes the breathing feel worse. Sitting still is a little easier but I'm still not right.",
+          "Moving around definitely makes it worse. Even small activity makes me feel more out of breath. Sitting still helps a little, but not completely.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
@@ -801,7 +801,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medical-history',
         answer:
-          "I have high blood pressure and my cholesterol is treated — no diagnosed asthma or COPD that I know of. I'm 60 — I don't run marathons but I'm not usually this winded.",
+          "I don’t have any major lung problems that I know of. I’ve generally been healthy. Nothing like this has happened before.",
         patterns: [
           'do you have any medical conditions',
           'any past medical history',
@@ -814,7 +814,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medications',
         answer:
-          "I take lisinopril for blood pressure and atorvastatin for cholesterol — every day, usually. That's the main stuff.",
+          "I’m not on any regular medications. I don’t take anything daily. No known allergies either.",
         patterns: [
           'do you take any medications',
           'what meds do you take',
@@ -920,7 +920,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'feeling-open',
         answer:
-          "I'm pretty miserable. Earlier today my whole belly felt off, then the pain moved down to my right lower side — sharp and constant. Walking makes it spike, I feel nauseous and I threw up once, and I haven't wanted food. I had a low-grade fever at home. No diarrhea, and it doesn't burn when I pee.",
+          "My stomach started hurting earlier today, and it’s gotten worse over time. It started near my belly button but now it’s more on the lower right side. It hurts more when I move or walk.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
@@ -946,7 +946,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'quality',
         answer:
-          "It's sharp — like a stabbing cramp in one area — and it gets worse when I move or jostle. Not really burning like heartburn; more like something's inflamed down there.",
+          "It feels like a sharp, constant pain. It’s not cramping, more like a stabbing feeling. It’s pretty uncomfortable and doesn’t go away.",
         patterns: [
           'what does it feel like',
           'what kind of pain is it',
@@ -959,7 +959,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'onset',
         answer:
-          "It started earlier today — first I noticed it more around my belly button, then it migrated. If you mean exact time, late morning-ish, but it's been a few hours now.",
+          "It started earlier today, kind of gradually. At first it was mild, but it kept getting worse. Now it’s pretty strong.",
         patterns: [
           'when did this start',
           'when did it start',
@@ -972,7 +972,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'trajectory',
         answer:
-          "It's gotten worse — especially since the pain moved to the right lower side. I'm not improving.",
+          "It’s definitely been getting worse over time. It hasn’t improved at all. It’s more painful now than when it started.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
@@ -985,7 +985,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'location',
         answer:
-          "Right now the worst spot is my right lower abdomen — like down and to the side of my belly button. That's where it hurts to press or move.",
+          "Right now it’s mostly in the lower right side of my abdomen. That’s where it hurts the most. It’s very specific to that area now.",
         patterns: [
           'where exactly do you feel it',
           'where is the pain',
@@ -999,7 +999,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'radiation',
         answer:
-          "It started more in the middle near my belly button, but now it's mostly the lower right — it doesn't really shoot up to my shoulder. It's localized down there.",
+          "It started more in the middle near my belly button, but then moved to the lower right side. Now it mostly stays there. It doesn’t really spread anywhere else.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
@@ -1024,7 +1024,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "I'm not short of breath. I'm definitely nauseous and I puked once. I've felt a little sweaty with the fever but not like drenched.",
+          "I’ve been feeling nauseous and I did throw up once. I haven’t noticed shortness of breath or sweating. The nausea started after the pain got worse.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
@@ -1037,7 +1037,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'worse',
         answer:
-          "Walking, going over bumps in the car, even getting up — anything that jiggles my belly makes it worse. Lying still is a little better but not great.",
+          "Moving around or walking definitely makes it worse. Even small movements can make it hurt more. Lying still helps a little.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
@@ -1057,7 +1057,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medical-history',
         answer:
-          "I'm usually healthy — no major medical problems, no Crohn's or anything like that. I've never had surgery on my belly.",
+          "I don’t have any medical problems that I know of. I’ve been pretty healthy overall. No major issues before this.",
         patterns: [
           'do you have any medical conditions',
           'any past medical history',
@@ -1070,7 +1070,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medications',
         answer:
-          "I don't take any regular prescriptions — maybe ibuprofen once in a while for a headache, but that's it.",
+          "I don’t take any regular medications. I haven’t needed anything daily. I don’t have any allergies that I know of.",
         patterns: [
           'do you take any medications',
           'what meds do you take',
@@ -1158,7 +1158,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'feeling-open',
         answer:
-          "I feel awful — hot and then cold, and my head isn't working right. I'm confused about where I am sometimes, and I'm weaker than usual. It burns a little when I pee. My family says I started acting strange this morning. I'm trying to answer you but I'm foggy — I have diabetes and high blood pressure, and I take pills, but I can't remember every name right now.",
+          "I’ve been feeling very weak and confused, like I can’t think clearly. I’ve also had a fever, and everything just feels off. It’s been hard to focus on things.",
         patterns: [
           'can you tell me more about what you re feeling',
           'can you tell me more about what you\'re feeling',
@@ -1184,7 +1184,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'quality',
         answer:
-          "It's hard to describe — it's not just pain. I feel boiling one minute and freezing the next, and my thinking is slow and fuzzy, like I'm underwater. I'm nauseous off and on.",
+          "It’s not really pain, it’s more like my head feels foggy. I feel tired and a bit disoriented. I just don’t feel like myself.",
         patterns: [
           'what does it feel like',
           'what kind of pain is it',
@@ -1197,7 +1197,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'onset',
         answer:
-          "This morning is when my family noticed it — I wasn't this bad yesterday. It's been getting worse through the day, as far as I can tell.",
+          "It started recently, maybe over the last day or so. I can’t remember the exact time. It just gradually got worse.",
         patterns: [
           'when did this start',
           'when did it start',
@@ -1209,7 +1209,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'trajectory',
         answer:
-          "Worse — I was a little off earlier, but now I'm really out of it and weak. I'm not improving.",
+          "It seems like it’s been getting worse. I feel more confused now than before. I’m having a harder time thinking clearly.",
         patterns: [
           'has it been getting better or worse',
           'getting better or worse',
@@ -1222,7 +1222,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'location',
         answer:
-          "It's not really one spot — I feel sick everywhere, and my head feels heavy and confused. The burning when I pee is lower down — that's the only localized thing.",
+          "It’s more in my head, like mentally. I don’t have a specific spot of pain. It’s more of a general feeling of confusion and weakness.",
         patterns: [
           'where exactly do you feel it',
           'where do you feel it',
@@ -1235,7 +1235,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'radiation',
         answer:
-          "The confusion and fever don't 'travel' like pain down an arm — it's more all-over sickness. The urinary burning is separate, down low.",
+          "It doesn’t really spread anywhere like pain would. It’s more of an overall feeling in my body. I just feel weak all over.",
         patterns: [
           'does it go anywhere else',
           'does the pain travel',
@@ -1248,7 +1248,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'associated-sob-nausea-sweat',
         answer:
-          "I'm not really short of breath — a little winded when I'm feverish maybe. I feel nauseous. I've been sweating with the fever, drenched off and on.",
+          "I’ve had a fever and felt weak, but not much shortness of breath. I don’t think I’ve been very nauseous. I just feel tired and unwell.",
         patterns: [
           'any shortness of breath nausea or sweating',
           'shortness of breath nausea or sweating',
@@ -1261,7 +1261,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'worse',
         answer:
-          "Trying to stand up and walk makes me feel worse — I want to lie still. Bright lights bother me a bit. Nothing fixes it.",
+          "It seems worse when I try to think or move around too much. I get more confused when I try to focus. Resting helps a little.",
         patterns: [
           'does anything make it worse',
           'what makes it worse',
@@ -1273,7 +1273,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medical-history',
         answer:
-          "I have diabetes and high blood pressure — I've had both for years. I don't remember every hospital visit, but those are the big ones my family reminds me about.",
+          "I have some medical problems, but I can’t remember all the details right now. I’ve had health issues before. I usually manage them with medication.",
         patterns: [
           'do you have any medical conditions',
           'any past medical history',
@@ -1285,7 +1285,7 @@ const FALLBACK_SCENARIOS: FallbackScenario[] = [
       {
         id: 'medications',
         answer:
-          "I take pills for blood sugar and blood pressure — metformin I know for sure, and something for pressure — maybe lisinopril? I also take a water pill sometimes. I'm sorry, I'm fuzzy on the full list today.",
+          "I do take some medications, but I can’t remember all their names right now. I take them regularly at home. I don’t think I have any allergies.",
         patterns: [
           'do you take any medications',
           'what meds do you take',

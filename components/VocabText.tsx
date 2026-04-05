@@ -190,7 +190,7 @@ export default function VocabText({ text, onTermClick, onTermSave }: Props) {
                 onClick={handleSaveTerm}
                 className="flex-1 px-3 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition text-sm font-medium flex items-center justify-center gap-1"
               >
-                ⭐ Save to My Vocab
+                Save term
               </button>
             </div>
             

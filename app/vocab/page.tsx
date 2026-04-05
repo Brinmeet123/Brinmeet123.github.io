@@ -44,18 +44,16 @@ export default function VocabPage() {
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">My Vocabulary</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">Vocabulary</h1>
         <p className="text-gray-600">
-          {isAuthed
-            ? 'Terms you save from scenarios are stored in your account.'
-            : 'Sign in to save terms to your account and access them from any device.'}
+          {isAuthed ? 'Terms saved from scenarios.' : 'Sign in to sync saved terms.'}
         </p>
         {status !== 'loading' && !isAuthed && (
           <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
             <Link href="/login" className="font-semibold text-teal-800 hover:text-teal-900 underline">
-              Log in or create an account
+              Sign in
             </Link>{' '}
-            to save vocabulary and sync your list.
+            to save and sync.
           </div>
         )}
       </div>
@@ -72,7 +70,7 @@ export default function VocabPage() {
         <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
           <Link href="/vocab/quiz" className="block text-center">
             <p className="text-sm text-purple-700 mb-1">Practice</p>
-            <p className="text-lg font-bold text-purple-900">Take quiz →</p>
+            <p className="text-lg font-bold text-purple-900">Quiz</p>
           </Link>
         </div>
       </div>
