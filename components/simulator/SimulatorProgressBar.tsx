@@ -3,12 +3,12 @@
 /** In-case flow: Chat, exam, tests, diagnosis, results */
 export type SimulatorStep = 1 | 2 | 3 | 4 | 5
 
-const STEPS: { step: SimulatorStep; label: string }[] = [
-  { step: 1, label: 'Chat' },
-  { step: 2, label: 'View exams' },
-  { step: 3, label: 'Order tests' },
-  { step: 4, label: 'Diagnosis' },
-  { step: 5, label: 'Results' },
+const STEPS: { step: SimulatorStep; label: string; phase: string }[] = [
+  { step: 1, label: 'Ask Questions', phase: 'Gathering information' },
+  { step: 2, label: 'Review Exam', phase: 'Reviewing clues' },
+  { step: 3, label: 'Order Tests', phase: 'Gathering data' },
+  { step: 4, label: 'Make Diagnosis', phase: 'Committing to a diagnosis' },
+  { step: 5, label: 'See Results', phase: 'Reviewing feedback' },
 ]
 
 type Props = {
@@ -24,7 +24,12 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
       aria-label="Simulator progress"
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Progress</p>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Progress</p>
+          <p className="mt-0.5 text-sm font-medium text-slate-800">
+            Step {currentStep} of 5: {STEPS.find((s) => s.step === currentStep)?.phase}
+          </p>
+        </div>
         <ol className="flex max-w-full flex-wrap items-center gap-x-1 gap-y-2 overflow-x-auto pb-0.5 text-xs sm:text-sm">
           {STEPS.map(({ step, label }, idx) => {
             const isCurrent = step === currentStep
@@ -55,7 +60,7 @@ export default function SimulatorProgressBar({ currentStep, className = '' }: Pr
         </ol>
       </div>
       <p className="mt-2 text-[11px] text-slate-500 sm:hidden">
-        Step {currentStep}: {STEPS.find((s) => s.step === currentStep)?.label}
+        {STEPS.find((s) => s.step === currentStep)?.label} — {STEPS.find((s) => s.step === currentStep)?.phase}
       </p>
     </div>
   )

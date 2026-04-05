@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
+import NextStepGuidance from '@/components/ux/NextStepGuidance'
 import { auth } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { scoreToLevel } from '@/lib/scoring'
@@ -51,8 +52,15 @@ export default async function DashboardPage() {
 
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-      <h1 className="text-3xl font-bold text-slate-900 mb-2">Dashboard</h1>
-      <p className="text-slate-600 mb-8">Progress and scores.</p>
+      <p className="text-sm font-semibold text-teal-800 mb-1">Your learning hub</p>
+      <h1 className="text-3xl font-bold text-slate-900 mb-2">Track Your Progress</h1>
+      <p className="text-slate-600 mb-2">See completed cases, scores, and where to drill next.</p>
+      <p className="text-sm text-slate-500 mb-6">Open any scenario below to resume or replay — your best scores stay on record.</p>
+      <div className="mb-8 max-w-lg">
+        <NextStepGuidance compact>
+          Jump into a case you haven&apos;t finished — or retry one to beat your best score.
+        </NextStepGuidance>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6">
@@ -146,12 +154,12 @@ export default async function DashboardPage() {
       <div className="mt-8 flex flex-wrap gap-4">
         <Link
           href="/scenarios"
-          className="inline-flex items-center rounded-lg bg-teal-700 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-800 transition"
+          className="btn-press inline-flex items-center rounded-lg bg-teal-700 text-white px-5 py-2.5 text-sm font-semibold hover:bg-teal-800 transition"
         >
-          Practice scenarios
+          Open case library
         </Link>
-        <Link href="/vocab" className="inline-flex items-center rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition">
-          My vocabulary
+        <Link href="/vocab" className="btn-press inline-flex items-center rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 transition">
+          Review vocabulary
         </Link>
       </div>
     </div>

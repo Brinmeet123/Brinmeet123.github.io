@@ -147,11 +147,12 @@ export default function DiagnosisPanel({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-      <p className="mb-4 text-sm text-slate-500">
-        Differential detail and final pick feed the rubric.
+      <p className="mb-4 text-sm text-slate-600 leading-relaxed">
+        Build a ranked differential, then choose one final diagnosis. Your picks shape the feedback you&apos;ll see
+        next.
       </p>
 
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">Diagnosis</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">Make your diagnosis</h2>
       
       <div className="flex flex-col lg:flex-row gap-4">
         {/* Category Sidebar */}
@@ -403,11 +404,12 @@ export default function DiagnosisPanel({
       </div>
 
       <button
+        type="button"
         onClick={handleSubmit}
         disabled={!finalDxId || differential.length === 0}
-        className="w-full mt-6 px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-medium"
+        className="btn-press w-full mt-6 px-6 py-3 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
       >
-        Submit & view results
+        See How You Did →
       </button>
     </div>
   )

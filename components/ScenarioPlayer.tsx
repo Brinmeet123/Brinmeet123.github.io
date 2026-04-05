@@ -17,6 +17,7 @@ import SimulatorProgressBar from './simulator/SimulatorProgressBar'
 import SimulatorHelpButton from './simulator/SimulatorHelpButton'
 import SimulatorStepInstruction from './simulator/SimulatorStepInstruction'
 import type { SimulatorStep } from './simulator/SimulatorProgressBar'
+import NextStepGuidance from './ux/NextStepGuidance'
 
 type Message = {
   role: 'doctor' | 'patient'
@@ -383,15 +384,15 @@ export default function ScenarioPlayer({ scenario }: Props) {
   /** Readiness for Step 1 (chat) only — next action is always the physical exam. */
   const chatReadiness = (() => {
     if (doctorTurns < 3) {
-      return { ok: false, text: 'A few more questions before the exam.' }
+      return { ok: false, text: 'Ask a few more questions — then head to the exam when you feel ready.' }
     }
-    return { ok: true, text: 'Ready to continue.' }
+    return { ok: true, text: "Nice — you've got enough history to move on. Continue to the exam." }
   })()
 
   const sections = [
     {
       id: 'history' as ClinicalSection,
-      label: 'History',
+      label: 'Interview',
       disabled: false,
     },
     {
@@ -408,13 +409,13 @@ export default function ScenarioPlayer({ scenario }: Props) {
       id: 'diagnosis' as ClinicalSection,
       label: 'Diagnosis',
       disabled: !canAccessDiagnosis,
-      disabledReason: 'Finish the exam and order at least one test first.',
+      disabledReason: 'Open the exam and order at least one test first.',
     },
     {
       id: 'debrief' as ClinicalSection,
-      label: 'Debrief',
+      label: 'Results',
       disabled: !canAccessDebrief,
-      disabledReason: 'Submit a final diagnosis first.',
+      disabledReason: 'Choose a final diagnosis and submit to see your report.',
     },
   ]
 
@@ -433,12 +434,13 @@ export default function ScenarioPlayer({ scenario }: Props) {
       <SimulatorHelpButton currentStep={learnerStep} activeSection={activeSection} />
 
       <div className="mb-6">
-        <div className="mb-2">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{scenario.title}</h1>
-            <p className="text-gray-600">{scenario.description}</p>
-          </div>
-        </div>
+        <p className="text-sm font-semibold text-primary-700 mb-1">Active case</p>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">{scenario.title}</h1>
+        <p className="text-lg text-slate-700 leading-relaxed">{scenario.description}</p>
+        <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-700">
+          <span className="font-medium text-slate-900">What happens next: </span>
+          Interview → physical exam → tests → your diagnosis → a scored report with feedback.
+        </p>
       </div>
 
       {/* Vital Signs - Always visible */}
@@ -474,10 +476,17 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {activeSection === 'history' && (
         <>
           <SimulatorStepInstruction
-            title="Step 1: History"
-            description="Start with a quick question or type your own."
-            footerHint="Continue to the exam when you are ready."
+            title="Step 1: Ask questions"
+            description="Gather the story before you examine or order tests."
+            footerHint="When you're ready, continue to the exam — you can return to this tab anytime."
           />
+
+          <div className="mb-4 rounded-xl border border-primary-200 bg-gradient-to-r from-primary-50 to-sky-50 px-4 py-3 shadow-sm">
+            <h2 className="text-lg font-semibold text-slate-900">🗣️ Ask Questions to Diagnose</h2>
+            <p className="text-sm text-slate-700 mt-1">
+              Use the suggested questions or type your own to gather information.
+            </p>
+          </div>
 
           <DoctorPatientScene patientName={scenario.patientPersona.name} onPatientClick={scrollToChat} />
           
@@ -494,7 +503,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
-                  Helper
+                  Quick prompts
                 </button>
                 <button
                   onClick={() => setMobileTab('chat')}
@@ -518,14 +527,21 @@ export default function ScenarioPlayer({ scenario }: Props) {
                   />
                 </div>
               ) : (
-                <div id="chat-panel">
-                  <ChatPanel 
-                    scenario={scenario} 
-                    messages={chatMessages} 
+                <div id="chat-panel" className="relative">
+                  <ChatPanel
+                    scenario={scenario}
+                    messages={chatMessages}
+                    doctorMessageCount={doctorTurns}
                     onChatUpdate={handleChatUpdate}
                     onTermClick={handleTermClick}
                     onTermSave={handleTermSave}
                   />
+                  <div className="pointer-events-none absolute top-2 right-2 z-10 hidden max-w-[13rem] md:block">
+                    <div className="pointer-events-auto rounded-2xl border border-sky-200 bg-white/95 px-3 py-2.5 text-xs text-slate-600 shadow-md backdrop-blur-sm leading-snug">
+                      💡 <span className="font-medium text-slate-800">Tip:</span> Start with symptoms, duration, and
+                      medical history.
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -544,14 +560,21 @@ export default function ScenarioPlayer({ scenario }: Props) {
 
                 {/* Right Panel: Chat */}
                 <div className="flex-1 bg-white rounded-lg overflow-hidden p-4 flex flex-col">
-                  <div id="chat-panel" className="flex-1 min-h-0">
-                    <ChatPanel 
-                      scenario={scenario} 
-                      messages={chatMessages} 
+                  <div id="chat-panel" className="relative flex-1 min-h-0">
+                    <ChatPanel
+                      scenario={scenario}
+                      messages={chatMessages}
+                      doctorMessageCount={doctorTurns}
                       onChatUpdate={handleChatUpdate}
                       onTermClick={handleTermClick}
                       onTermSave={handleTermSave}
                     />
+                    <div className="pointer-events-none absolute top-2 right-2 z-10 hidden max-w-[13rem] xl:block">
+                      <div className="pointer-events-auto rounded-2xl border border-sky-200 bg-white/95 px-3 py-2.5 text-xs text-slate-600 shadow-md backdrop-blur-sm leading-snug">
+                        💡 <span className="font-medium text-slate-800">Tip:</span> Start with symptoms, duration, and
+                        medical history.
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -559,6 +582,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
           )}
 
           <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+            <NextStepGuidance compact>
+              Keep asking until you understand the complaint — then tap Continue to move to the exam.
+            </NextStepGuidance>
             <div
               className={`rounded-lg border px-3 py-2 text-sm font-medium ${
                 chatReadiness.ok
@@ -572,9 +598,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
             <button
               type="button"
               onClick={() => setActiveSection('exam')}
-              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+              className="btn-press w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
             >
-              Continue to exam
+              Continue to exam →
             </button>
           </div>
         </>
@@ -583,9 +609,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {activeSection === 'exam' && (
         <>
           <SimulatorStepInstruction
-            title="Step 2: Exam"
-            description="Open each system and read the findings."
-            footerHint="Continue to tests when you are set."
+            title="Step 2: Review the exam"
+            description="Open each system and read the findings like you would at the bedside."
+            footerHint="Next you'll order tests — take what you need from the exam first."
           />
           <PhysicalExamPanel
             sections={scenario.physicalExam}
@@ -595,13 +621,16 @@ export default function ScenarioPlayer({ scenario }: Props) {
             onTermClick={handleTermClick}
             onTermSave={handleTermSave}
           />
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+            <NextStepGuidance compact>
+              Review each relevant system — your findings will guide what you order next.
+            </NextStepGuidance>
             <button
               type="button"
               onClick={() => setActiveSection('tests')}
-              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+              className="btn-press w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
             >
-              Continue to tests
+              Continue to tests →
             </button>
           </div>
         </>
@@ -610,9 +639,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {activeSection === 'tests' && (
         <>
           <SimulatorStepInstruction
-            title="Step 3: Tests"
-            description="Order what you need. You need at least one test before diagnosis."
-            footerHint="Continue to diagnosis after you order."
+            title="Step 3: Order tests"
+            description="Pick studies you'd really order — you need at least one test before diagnosis unlocks."
+            footerHint="Then build your differential and choose a final diagnosis."
           />
           <TestsPanel
             scenario={scenario}
@@ -621,7 +650,11 @@ export default function ScenarioPlayer({ scenario }: Props) {
             onTermClick={handleTermClick}
             onTermSave={handleTermSave}
           />
-          <div className="mt-6 space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+          <div className="mt-6 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+            <NextStepGuidance compact>
+              Order what you need to narrow the problem — diagnosis opens after you've reviewed the exam and placed at
+              least one test.
+            </NextStepGuidance>
             {!canAccessDiagnosis && (
               <p className="text-sm text-amber-800">
                 Open an exam section and order at least one test to unlock diagnosis.
@@ -636,9 +669,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
                   ? undefined
                   : 'Exam + at least one test required.'
               }
-              className="w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="btn-press w-full rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Continue to diagnosis
+              Continue to diagnosis →
             </button>
           </div>
         </>
@@ -647,10 +680,15 @@ export default function ScenarioPlayer({ scenario }: Props) {
       {activeSection === 'diagnosis' && (
         <>
           <SimulatorStepInstruction
-            title="Step 4: Diagnosis"
-            description="Build your differential, then pick one final diagnosis."
-            footerHint="Submit below for debrief and score."
+            title="Step 4: Make your diagnosis"
+            description="Build a ranked differential, then pick one final answer you can defend."
+            footerHint="Submit to generate your report — strengths, gaps, and teaching points."
           />
+          <div className="mb-4">
+            <NextStepGuidance compact>
+              Add your working diagnoses, rank them, choose a final pick — then submit to see how you did.
+            </NextStepGuidance>
+          </div>
           <DiagnosisPanel
             scenario={scenario}
             differential={differential}
@@ -668,7 +706,7 @@ export default function ScenarioPlayer({ scenario }: Props) {
         <>
           {isLoadingAssessment ? (
             <div className="bg-white rounded-lg shadow-md p-12 text-center">
-              <p className="text-gray-600">Loading assessment…</p>
+              <p className="text-gray-600">Building your report — scoring feedback and teaching points…</p>
             </div>
           ) : assessment ? (
             <SummaryPanel 

@@ -70,7 +70,7 @@ export default function FocusPrompts({ onInsertQuestion }: Props) {
 
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-medium text-gray-700 mb-3">Themes</h3>
+      <h3 className="text-sm font-medium text-gray-700 mb-3">Suggested angles</h3>
       <div className="space-y-2">
         {focusPrompts.map(prompt => {
           const isExpanded = expanded.has(prompt.id)
@@ -81,8 +81,9 @@ export default function FocusPrompts({ onInsertQuestion }: Props) {
               className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow transition-shadow"
             >
               <button
+                type="button"
                 onClick={() => handleToggle(prompt.id)}
-                className="w-full px-3 py-2.5 text-left flex items-center justify-between hover:bg-gray-50 transition"
+                className="btn-press w-full px-3 py-2.5 text-left flex items-center justify-between hover:bg-gray-50 transition"
               >
                 <span className="text-sm text-gray-900">{prompt.label}</span>
                 <span className="text-gray-400 text-xs">
@@ -96,11 +97,12 @@ export default function FocusPrompts({ onInsertQuestion }: Props) {
                     {prompt.questions.map((question, idx) => (
                       <button
                         key={idx}
+                        type="button"
                         onClick={(e) => {
                           e.stopPropagation()
                           onInsertQuestion(question)
                         }}
-                        className="w-full text-left px-2.5 py-1.5 text-xs text-gray-700 bg-white border border-gray-200 rounded hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition"
+                        className="btn-press w-full text-left px-2.5 py-1.5 text-xs text-gray-700 bg-white border border-gray-200 rounded hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition"
                       >
                         {question}
                       </button>

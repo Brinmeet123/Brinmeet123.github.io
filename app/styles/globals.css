@@ -22,6 +22,11 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
+  /** Subtle press feedback for primary actions (gamified but professional) */
+  .btn-press {
+    @apply transition-transform duration-150 ease-out active:scale-[0.98];
+  }
 }
 
 /* Resizable panels styling */

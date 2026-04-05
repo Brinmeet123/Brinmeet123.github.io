@@ -6,6 +6,7 @@ import type { RubricBreakdown } from '@/lib/scoring'
 import VocabText from './VocabText'
 import VocabContextBlock from './VocabContextBlock'
 import { vocab, getVocabTerm } from '@/data/vocab'
+import NextStepGuidance from './ux/NextStepGuidance'
 
 type DebriefStructured = {
   summary: string
@@ -70,7 +71,17 @@ const ratingColors: Record<string, string> = {
   Poor: 'bg-red-100 text-red-800 border-red-300',
 }
 
-function RubricBlock({ rubric, score, level }: { rubric: RubricBreakdown; score: number; level: string }) {
+function RubricBlock({
+  rubric,
+  score,
+  level,
+  feedback,
+}: {
+  rubric: RubricBreakdown
+  score: number
+  level: string
+  feedback: string
+}) {
   const rows: { label: string; value: number; max: number }[] = [
     { label: 'Diagnosis', value: rubric.diagnosis, max: 40 },
     { label: 'Questioning', value: rubric.questioning, max: 25 },
@@ -78,13 +89,15 @@ function RubricBlock({ rubric, score, level }: { rubric: RubricBreakdown; score:
     { label: 'Efficiency', value: rubric.efficiency, max: 10 },
   ]
   return (
-    <div className="mb-6 p-4 bg-teal-50 rounded-lg border border-teal-200">
-      <h3 className="text-lg font-semibold text-teal-900 mb-2">Scenario score</h3>
-      <p className="text-2xl font-bold text-slate-900 mb-1 tabular-nums transition-all duration-500 ease-out">
-        {score}{' '}
-        <span className="text-lg font-semibold text-teal-800">({level})</span>
+    <div className="mb-6 p-5 bg-gradient-to-br from-teal-50 to-slate-50 rounded-xl border border-teal-200 shadow-sm">
+      <h3 className="text-lg font-semibold text-teal-900 mb-2">Your score</h3>
+      <p className="text-4xl font-bold text-slate-900 tabular-nums transition-all duration-500 ease-out">
+        {score}
+        <span className="text-2xl font-semibold text-slate-600">/100</span>
       </p>
-      <p className="text-xs text-slate-600 mb-4">Weighted rubric (0–100)</p>
+      <p className="text-sm font-medium text-teal-900 mt-1">{level}</p>
+      <p className="text-sm text-slate-700 mt-2 leading-relaxed">{feedback}</p>
+      <p className="text-xs text-slate-500 mt-4 mb-3">Weighted rubric breakdown</p>
       <h4 className="text-sm font-semibold text-slate-800 mb-2">Breakdown</h4>
       <ul className="space-y-1.5 text-sm text-slate-700">
         {rows.map((r) => (
@@ -162,17 +175,31 @@ export default function SummaryPanel({
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
       <VocabContextBlock source="debrief" scenarioId={scenario.id} text={debriefContext}>
-      <h2 className="text-2xl font-bold text-gray-900 mb-2">Results</h2>
-      <p className="mb-6 text-sm text-slate-600">Score and feedback for this run.</p>
+      <h2 className="text-2xl font-bold text-gray-900 mb-2">📊 Your Diagnosis Report</h2>
+      <p className="mb-6 text-sm text-slate-600 leading-relaxed">
+        Here&apos;s how this run scored, what you nailed, what to tighten, and what to take forward.
+      </p>
 
       {scenarioScore && (
-        <>
-          <RubricBlock rubric={scenarioScore.rubric} score={scenarioScore.score} level={scenarioScore.level} />
-          <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <h3 className="text-sm font-semibold text-slate-900 mb-2">Rubric feedback</h3>
-            <p className="text-sm text-slate-700">{scenarioScore.feedback}</p>
-          </div>
-        </>
+        <RubricBlock
+          rubric={scenarioScore.rubric}
+          score={scenarioScore.score}
+          level={scenarioScore.level}
+          feedback={scenarioScore.feedback}
+        />
+      )}
+
+      {!scenarioScore && assessment.totalScore != null && (
+        <div className="mb-6 rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <h3 className="text-lg font-semibold text-slate-900 mb-1">Your score</h3>
+          <p className="text-3xl font-bold text-slate-900 tabular-nums">
+            {assessment.totalScore}
+            <span className="text-xl font-semibold text-slate-600">/{assessment.maxScore ?? 100}</span>
+          </p>
+          {assessment.totalScorePercentage != null && (
+            <p className="text-sm text-slate-600 mt-1">{assessment.totalScorePercentage}% overall</p>
+          )}
+        </div>
       )}
       
       {/* Badges Section */}
@@ -245,33 +272,50 @@ export default function SummaryPanel({
       </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <h3 className="text-lg font-semibold text-green-700 mb-2">Strengths</h3>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
-            {assessment.strengths.map((strength, idx) => (
-              <li key={idx}>
-                <VocabText 
-                  text={strength} 
-                  onTermClick={onTermClick}
-                  onTermSave={onTermSave}
-                />
-              </li>
-            ))}
-          </ul>
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+          <h3 className="text-lg font-semibold text-emerald-900 mb-2">✅ What You Did Well</h3>
+          {assessment.strengths.length === 0 ? (
+            <p className="text-sm text-slate-600">Nothing listed — the feedback below still has detail.</p>
+          ) : (
+            <ul className="list-disc list-inside space-y-1 text-gray-700">
+              {assessment.strengths.map((strength, idx) => (
+                <li key={idx}>
+                  <VocabText 
+                    text={strength} 
+                    onTermClick={onTermClick}
+                    onTermSave={onTermSave}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        <div>
-          <h3 className="text-lg font-semibold text-yellow-700 mb-2">Areas for Improvement</h3>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
-            {assessment.areasForImprovement.map((area, idx) => (
-              <li key={idx}>
-                <VocabText 
-                  text={area} 
-                  onTermClick={onTermClick}
-                  onTermSave={onTermSave}
-                />
-              </li>
-            ))}
-          </ul>
+        <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-4">
+          <h3 className="text-lg font-semibold text-amber-900 mb-2">⚠️ What You Missed</h3>
+          {assessment.areasForImprovement.length === 0 && assessment.missedKeyHistoryPoints.length === 0 ? (
+            <p className="text-sm text-slate-600">No major gaps flagged — nice work staying thorough.</p>
+          ) : (
+            <ul className="list-disc list-inside space-y-1 text-gray-700">
+              {assessment.areasForImprovement.map((area, idx) => (
+                <li key={idx}>
+                  <VocabText 
+                    text={area} 
+                    onTermClick={onTermClick}
+                    onTermSave={onTermSave}
+                  />
+                </li>
+              ))}
+              {assessment.missedKeyHistoryPoints.map((point, idx) => (
+                <li key={`m-${idx}`}>
+                  <VocabText 
+                    text={point} 
+                    onTermClick={onTermClick}
+                    onTermSave={onTermSave}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
@@ -299,23 +343,6 @@ export default function SummaryPanel({
         </p>
       </div>
 
-      {assessment.missedKeyHistoryPoints.length > 0 && (
-        <div className="mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Missed Key History Points</h3>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
-            {assessment.missedKeyHistoryPoints.map((point, idx) => (
-              <li key={idx}>
-                <VocabText 
-                  text={point} 
-                  onTermClick={onTermClick}
-                  onTermSave={onTermSave}
-                />
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Test Selection Feedback</h3>
         <p className="text-gray-700">
@@ -340,18 +367,27 @@ export default function SummaryPanel({
         </div>
       )}
 
-      {ds?.clinicalPearls && ds.clinicalPearls.length > 0 && (
-        <div className="mb-6 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Clinical pearls</h3>
-          <ul className="list-disc list-inside space-y-1 text-gray-700">
-            {ds.clinicalPearls.map((line, idx) => (
-              <li key={idx}>
+      {(ds?.clinicalPearls?.length || scenario.teachingPoints.length > 0) ? (
+        <div className="mb-6 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">🧠 Key Medical Insight</h3>
+          <ul className="list-disc list-inside space-y-2 text-gray-700">
+            {(ds?.clinicalPearls ?? []).map((line, idx) => (
+              <li key={`pearl-${idx}`}>
                 <VocabText text={line} onTermClick={onTermClick} onTermSave={onTermSave} />
+              </li>
+            ))}
+            {scenario.teachingPoints.map((point, idx) => (
+              <li key={`tp-${idx}`}>
+                <VocabText 
+                  text={point} 
+                  onTermClick={onTermClick}
+                  onTermSave={onTermSave}
+                />
               </li>
             ))}
           </ul>
         </div>
-      )}
+      ) : null}
 
       {ds?.vocabToReview && ds.vocabToReview.length > 0 && (
         <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
@@ -360,39 +396,29 @@ export default function SummaryPanel({
         </div>
       )}
 
-      <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">Teaching points</h3>
-        <ul className="list-disc list-inside space-y-2 text-gray-700">
-          {scenario.teachingPoints.map((point, idx) => (
-            <li key={idx}>
-              <VocabText 
-                text={point} 
-                onTermClick={onTermClick}
-                onTermSave={onTermSave}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="mt-8 rounded-xl border border-primary-200 bg-primary-50/60 p-5">
-        <p className="font-semibold text-slate-900">Next</p>
-        <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-          <button
-            type="button"
-            onClick={() => {
-              window.location.href = `/scenarios/${scenario.id}`
-            }}
-            className="flex-1 rounded-lg border border-primary-300 bg-white px-4 py-3 text-center text-sm font-semibold text-primary-800 shadow-sm transition hover:bg-primary-50"
-          >
-            Retry case
-          </button>
-          <Link
-            href="/scenarios"
-            className="flex-1 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
-          >
-            Another case
-          </Link>
+      <div className="mt-8 space-y-4">
+        <NextStepGuidance>
+          Run the case again to beat your score — or pick a new scenario to practice a different presentation.
+        </NextStepGuidance>
+        <div className="rounded-xl border border-primary-200 bg-primary-50/60 p-5">
+          <p className="font-semibold text-slate-900">What do you want to do next?</p>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.href = `/scenarios/${scenario.id}`
+              }}
+              className="btn-press flex-1 rounded-lg border border-primary-300 bg-white px-4 py-3 text-center text-sm font-semibold text-primary-800 shadow-sm transition hover:bg-primary-50"
+            >
+              Try Again to Improve Score →
+            </button>
+            <Link
+              href="/scenarios"
+              className="btn-press flex-1 rounded-lg bg-primary-600 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-primary-700"
+            >
+              Pick Another Case
+            </Link>
+          </div>
         </div>
       </div>
       </VocabContextBlock>

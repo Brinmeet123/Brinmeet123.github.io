@@ -19,14 +19,15 @@ const coreQuestions = [
 export default function SimpleQuestionBank({ onInsertQuestion }: Props) {
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-semibold text-gray-900 mb-1">Quick questions</h3>
-      <p className="text-xs text-gray-500 mb-3">Tap to send</p>
+      <h3 className="text-sm font-semibold text-gray-900 mb-0.5">Quick Start Questions:</h3>
+      <p className="text-xs text-gray-500 mb-3">Tap to send — or type your own in the chat.</p>
       <div className="grid grid-cols-1 gap-1.5">
         {coreQuestions.map((question, idx) => (
           <button
             key={idx}
+            type="button"
             onClick={() => onInsertQuestion(question)}
-            className="w-full text-left px-2.5 py-1.5 text-xs text-gray-700 bg-white border border-gray-200 rounded hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition"
+            className="btn-press w-full text-left px-2.5 py-1.5 text-xs text-gray-700 bg-white border border-gray-200 rounded hover:bg-primary-50 hover:border-primary-300 hover:text-primary-700 transition"
           >
             {question}
           </button>

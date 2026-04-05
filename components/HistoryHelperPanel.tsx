@@ -24,6 +24,13 @@ export default function HistoryHelperPanel({ scenario, onInsertQuestion, message
       {messages.length > 0 && <HintMeter scenario={scenario} messages={messages} />}
 
       <SimpleQuestionBank onInsertQuestion={onInsertQuestion} />
+
+      <div className="mt-auto pt-4 md:hidden">
+        <div className="rounded-xl border border-sky-200 bg-sky-50/90 px-3 py-2.5 text-xs text-slate-700 leading-snug shadow-sm">
+          💡 <span className="font-medium text-slate-900">Tip:</span> Start with symptoms, duration, and medical
+          history.
+        </div>
+      </div>
     </div>
   )
 }

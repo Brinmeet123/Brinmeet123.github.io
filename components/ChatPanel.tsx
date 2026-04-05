@@ -14,6 +14,8 @@ type Message = {
 type Props = {
   scenario: Scenario
   messages?: Message[]
+  /** Count of doctor messages — used for early-interview encouragement only */
+  doctorMessageCount?: number
   onChatUpdate: (messages: Message[]) => void
   onTermClick?: (term: string) => void
   onTermSave?: (term: string) => void
@@ -34,7 +36,14 @@ function messagesShallowEqual(a: Message[], b: Message[]): boolean {
   return true
 }
 
-export default function ChatPanel({ scenario, messages: initialMessages, onChatUpdate, onTermClick, onTermSave }: Props) {
+export default function ChatPanel({
+  scenario,
+  messages: initialMessages,
+  doctorMessageCount = 0,
+  onChatUpdate,
+  onTermClick,
+  onTermSave,
+}: Props) {
   const [messages, setMessages] = useState<Message[]>(
     initialMessages || [
       {
@@ -45,6 +54,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
   )
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [questionHint, setQuestionHint] = useState<string | null>(null)
   const messagesScrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const onChatUpdateRef = useRef(onChatUpdate)
@@ -70,6 +80,23 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
       el.scrollTop = el.scrollHeight
     })
   }, [messages, isLoading])
+
+  // Light-touch feedback after each doctor message (wording only — no scoring change)
+  useEffect(() => {
+    const last = messages[messages.length - 1]
+    if (!last || last.role !== 'doctor') {
+      setQuestionHint(null)
+      return
+    }
+    const len = last.content.trim().length
+    if (len > 0 && len < 10) {
+      setQuestionHint('Try being more specific — add timing, location, or what makes it better or worse.')
+    } else if (len >= 48) {
+      setQuestionHint('Nice thinking 👏')
+    } else {
+      setQuestionHint(null)
+    }
+  }, [messages])
 
   const runPatientTurn = useCallback(
     async (newMessages: Message[]) => {
@@ -224,7 +251,7 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 flex flex-col h-full min-h-0 max-h-[min(85vh,720px)]">
-      <h2 className="text-lg font-semibold text-gray-900 mb-4">History & Interview</h2>
+      <h2 className="sr-only">Patient interview</h2>
       <VocabContextBlock
         source="chat"
         scenarioId={scenario.id}
@@ -273,6 +300,17 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
         )}
       </div>
       </VocabContextBlock>
+
+      {doctorMessageCount >= 1 && doctorMessageCount <= 3 && (
+        <p className="mb-2 text-xs text-emerald-900 bg-emerald-50 border border-emerald-200/90 rounded-lg px-3 py-2 leading-snug">
+          Good start. Keep narrowing it down.
+        </p>
+      )}
+
+      {questionHint && (
+        <p className="mb-2 text-xs text-slate-600 transition-opacity duration-300">{questionHint}</p>
+      )}
+
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           id="chat-input"
@@ -280,14 +318,14 @@ export default function ChatPanel({ scenario, messages: initialMessages, onChatU
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Your question"
+          placeholder="What would you ask next?"
           className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
-          className="px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          className="btn-press px-6 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           Send
         </button>
