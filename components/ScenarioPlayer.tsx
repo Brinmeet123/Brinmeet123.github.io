@@ -17,8 +17,12 @@ import SectionNav, {
   SECTION_STEP_COUNT,
 } from './SectionNav'
 import HistoryHelperPanel from './HistoryHelperPanel'
-import ScenarioSectionHeader, { getScenarioSectionGuidanceLine } from './ux/ScenarioSectionHeader'
+import { getScenarioSectionGuidanceLine } from './ux/ScenarioSectionHeader'
 import NextStepGuidance from './ux/NextStepGuidance'
+import InstructionModal from './InstructionModal'
+import HelpButton from './HelpButton'
+import { useInstructionModal } from '@/hooks/useInstructionModal'
+import { INSTRUCTION_COPY, type InstructionPageKey } from '@/lib/instructionCopy'
 
 type Message = {
   role: 'doctor' | 'patient'
@@ -110,6 +114,21 @@ function inferMaxUnlockedStepFromLegacy(state: {
   if (viewed > 0 && tests > 0) m = Math.max(m, 4)
   if (state.finalDiagnosisId != null || active === 'debrief') m = Math.max(m, 5)
   return Math.min(SECTION_STEP_COUNT, Math.max(1, m))
+}
+
+function sectionToInstructionPageKey(section: ClinicalSection): InstructionPageKey | null {
+  switch (section) {
+    case 'history':
+      return 'chat'
+    case 'exam':
+      return 'exam'
+    case 'tests':
+      return 'tests'
+    case 'diagnosis':
+      return 'diagnosis'
+    default:
+      return null
+  }
 }
 
 export default function ScenarioPlayer({ scenario }: Props) {
@@ -412,6 +431,9 @@ export default function ScenarioPlayer({ scenario }: Props) {
     setActiveSection(section)
   }
 
+  const instructionPageKey = sectionToInstructionPageKey(activeSection)
+  const instructionModal = useInstructionModal(instructionPageKey)
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-10">
@@ -453,8 +475,6 @@ export default function ScenarioPlayer({ scenario }: Props) {
         canAccessDiagnosis={canAccessDiagnosis}
         canAccessDebrief={canAccessDebrief}
       />
-
-      <ScenarioSectionHeader section={activeSection} />
 
       {/* Render only the active section */}
       {activeSection === 'history' && (
@@ -677,6 +697,21 @@ export default function ScenarioPlayer({ scenario }: Props) {
               <p className="text-gray-600">No assessment yet.</p>
             </div>
           )}
+        </>
+      )}
+
+      {instructionPageKey && (
+        <>
+          <InstructionModal
+            open={instructionModal.open}
+            title={INSTRUCTION_COPY[instructionPageKey].title}
+            description={INSTRUCTION_COPY[instructionPageKey].lines}
+            dontShowAgain={instructionModal.dontShowAgain}
+            onDontShowAgainChange={instructionModal.setDontShowAgain}
+            onGotIt={instructionModal.handleGotIt}
+            onBackdropClose={() => instructionModal.handleGotIt(false)}
+          />
+          <HelpButton onClick={instructionModal.openHelp} />
         </>
       )}
     </div>
