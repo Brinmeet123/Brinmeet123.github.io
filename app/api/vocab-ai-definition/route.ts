@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { callLLM } from '@/lib/llm'
+import { lookupDictionaryAny } from '@/lib/medicalDictionary'
 
 const DEMO = process.env.DEMO_MODE === 'true'
 
@@ -10,6 +11,18 @@ export async function POST(request: NextRequest) {
     term = typeof body.term === 'string' ? body.term.trim() : ''
     if (!term) {
       return NextResponse.json({ error: 'Missing term' }, { status: 400 })
+    }
+
+    const localDef = lookupDictionaryAny(term)
+    if (localDef) {
+      return NextResponse.json({
+        term,
+        shortDefinition: localDef,
+        definition: localDef,
+        category: 'general',
+        isAIGenerated: false as const,
+        source: 'dictionary' as const,
+      })
     }
 
     if (DEMO) {

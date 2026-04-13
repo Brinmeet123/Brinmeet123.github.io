@@ -1,9 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { vocab, VocabTerm } from '@/data/vocab'
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
+import { useSession } from 'next-auth/react'
+import type { VocabTerm } from '@/data/vocab'
+import { getMedicalChatSpans, type MedicalChatSpan } from '@/lib/medicalChatSpans'
 import { lookupMedicalTerm } from '@/src/lib/medicalTerms'
 import { useVocabStore } from '@/lib/useVocabStore'
+import { fetchMedicalDefinitionWithFallback } from '@/lib/fetchMedicalDefinition'
 
 type Props = {
   text: string
@@ -11,202 +14,276 @@ type Props = {
   onTermSave?: (term: string) => void
 }
 
-type VocabMatch = {
-  term: VocabTerm
-  startIndex: number
-  endIndex: number
-}
-
 export default function VocabText({ text, onTermClick, onTermSave }: Props) {
-  const [selectedTerm, setSelectedTerm] = useState<VocabTerm | null>(null)
-  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null)
+  const { status } = useSession()
+  const isAuthed = status === 'authenticated'
   const { saveMedicalTerm } = useVocabStore()
 
-  // Find all vocab terms in the text (prefer longer multi-word matches first)
-  const matches = useMemo(() => {
-    const found: VocabMatch[] = []
-    const lowerText = text.toLowerCase()
-    const ordered = [...vocab].sort((a, b) => b.term.length - a.term.length)
+  const spans = useMemo(() => getMedicalChatSpans(text), [text])
 
-    ordered.forEach(term => {
-      const termLower = term.term.toLowerCase()
-      const escaped = termLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-      const regex = new RegExp(`(?:^|[^\\p{L}\\p{N}])(${escaped})(?=[^\\p{L}\\p{N}]|$)`, 'giu')
-      let match
+  const [openSpan, setOpenSpan] = useState<MedicalChatSpan | null>(null)
+  const [popoverPosition, setPopoverPosition] = useState<{ x: number; y: number } | null>(null)
+  const anchorRef = useRef<HTMLButtonElement | null>(null)
 
-      while ((match = regex.exec(lowerText)) !== null) {
-        const g1 = match[1]
-        if (!g1) continue
-        const start = match.index + match[0].indexOf(g1)
-        const end = start + g1.length
-        const overlaps = found.some(
-          (m) =>
-            (start >= m.startIndex && start < m.endIndex) ||
-            (end > m.startIndex && end <= m.endIndex) ||
-            (start <= m.startIndex && end >= m.endIndex)
-        )
+  const [aiDefinition, setAiDefinition] = useState<string | null>(null)
+  const [aiLoading, setAiLoading] = useState(false)
 
-        if (!overlaps) {
-          found.push({
-            term,
-            startIndex: start,
-            endIndex: end,
-          })
-        }
+  const closePopover = useCallback(() => {
+    setOpenSpan(null)
+    setPopoverPosition(null)
+    anchorRef.current = null
+    setAiDefinition(null)
+    setAiLoading(false)
+  }, [])
+
+  const updatePopoverPosition = useCallback(() => {
+    const el = anchorRef.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    setPopoverPosition({
+      x: rect.left + rect.width / 2,
+      y: rect.top,
+    })
+  }, [])
+
+  useEffect(() => {
+    if (!openSpan) return
+    updatePopoverPosition()
+    window.addEventListener('scroll', updatePopoverPosition, true)
+    window.addEventListener('resize', updatePopoverPosition)
+    return () => {
+      window.removeEventListener('scroll', updatePopoverPosition, true)
+      window.removeEventListener('resize', updatePopoverPosition)
+    }
+  }, [openSpan, updatePopoverPosition])
+
+  useEffect(() => {
+    if (!openSpan) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closePopover()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [openSpan, closePopover])
+
+  /** AI fallback only when a span has no embedded definition (defensive / future-proof). */
+  useEffect(() => {
+    if (!openSpan) return
+    if (openSpan.kind === 'vocab') {
+      setAiDefinition(null)
+      return
+    }
+    const def = openSpan.definition?.trim()
+    if (def) {
+      setAiDefinition(def)
+      return
+    }
+    let cancelled = false
+    setAiLoading(true)
+    void fetchMedicalDefinitionWithFallback(openSpan.lookupKey).then((d) => {
+      if (!cancelled) {
+        setAiDefinition(d || null)
+        setAiLoading(false)
       }
     })
+    return () => {
+      cancelled = true
+    }
+  }, [openSpan])
 
-    // Sort by start index
-    return found.sort((a, b) => a.startIndex - b.startIndex)
-  }, [text])
-
-  const handleTermClick = (e: React.MouseEvent, term: VocabTerm) => {
+  const handleTermActivate = (e: React.MouseEvent, span: MedicalChatSpan) => {
     e.preventDefault()
     e.stopPropagation()
-    
+    anchorRef.current = e.currentTarget as HTMLButtonElement
     const rect = e.currentTarget.getBoundingClientRect()
     setPopoverPosition({
       x: rect.left + rect.width / 2,
-      y: rect.top - 10
+      y: rect.top,
     })
-    setSelectedTerm(term)
-    
-    if (onTermClick) {
-      onTermClick(term.term)
-    }
+    setOpenSpan(span)
+    const termStr = span.kind === 'vocab' ? span.term.term : span.lookupKey
+    if (onTermClick) onTermClick(termStr)
   }
 
-  const handleSaveTerm = () => {
-    if (selectedTerm && onTermSave) {
-      onTermSave(selectedTerm.term)
-    }
-    if (selectedTerm) {
-      const m = lookupMedicalTerm(selectedTerm.term)
-      if (m) saveMedicalTerm(m)
-    }
-    setSelectedTerm(null)
-    setPopoverPosition(null)
+  const handleSaveVocab = (term: VocabTerm) => {
+    if (onTermSave) onTermSave(term.term)
+    const m = lookupMedicalTerm(term.term)
+    if (m) void saveMedicalTerm(m)
+    closePopover()
   }
 
-  const handleClosePopover = () => {
-    setSelectedTerm(null)
-    setPopoverPosition(null)
+  const handleSaveDictionary = async (surface: string, definition: string) => {
+    if (!isAuthed || !definition.trim()) {
+      closePopover()
+      return
+    }
+    if (onTermSave) onTermSave(surface)
+    try {
+      const res = await fetch('/api/vocab', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ term: surface.trim(), definition: definition.trim() }),
+      })
+      if (!res.ok) throw new Error('save failed')
+    } catch {
+      /* ignore */
+    }
+    closePopover()
   }
 
-  // Build the text with highlighted terms
   const renderText = () => {
-    if (matches.length === 0) {
+    if (spans.length === 0) {
       return <span>{text}</span>
     }
 
     const elements: React.ReactNode[] = []
     let lastIndex = 0
 
-    matches.forEach((match, idx) => {
-      // Add text before the match
-      if (match.startIndex > lastIndex) {
+    spans.forEach((span, idx) => {
+      if (span.startIndex > lastIndex) {
         elements.push(
-          <span key={`text-${idx}`}>
-            {text.substring(lastIndex, match.startIndex)}
-          </span>
+          <span key={`t-${idx}`}>{text.substring(lastIndex, span.startIndex)}</span>
         )
       }
 
-      // Add the highlighted term
-      const originalTerm = text.substring(match.startIndex, match.endIndex)
+      const surface = text.substring(span.startIndex, span.endIndex)
       elements.push(
         <button
-          key={`term-${idx}`}
-          onClick={(e) => handleTermClick(e, match.term)}
-          className="underline decoration-2 decoration-primary-500 text-primary-700 hover:text-primary-900 hover:bg-primary-50 px-1 rounded transition cursor-pointer"
-          title={`Click to learn about ${match.term.display}`}
+          key={`m-${idx}`}
+          type="button"
+          onClick={(e) => handleTermActivate(e, span)}
+          className="medical-term text-emerald-900/90 underline decoration-dotted decoration-emerald-700/70 underline-offset-2 hover:text-emerald-950 hover:decoration-emerald-800 cursor-pointer bg-transparent border-0 p-0 font-inherit text-inherit align-baseline"
+          title="Click for definition"
         >
-          {originalTerm}
+          {surface}
         </button>
       )
 
-      lastIndex = match.endIndex
+      lastIndex = span.endIndex
     })
 
-    // Add remaining text
     if (lastIndex < text.length) {
-      elements.push(
-        <span key="text-end">{text.substring(lastIndex)}</span>
-      )
+      elements.push(<span key="end">{text.substring(lastIndex)}</span>)
     }
 
     return <>{elements}</>
   }
 
+  const showPopover = openSpan && popoverPosition
+
   return (
     <>
       <span className="vocab-text">{renderText()}</span>
-      
-      {selectedTerm && popoverPosition && (
+
+      {showPopover && (
         <>
-          {/* Backdrop to close popover */}
+          <div className="fixed inset-0 z-40" aria-hidden onClick={closePopover} />
+
           <div
-            className="fixed inset-0 z-40"
-            onClick={handleClosePopover}
-          />
-          
-          {/* Popover */}
-          <div
-            className="fixed z-50 bg-white rounded-lg shadow-xl border-2 border-primary-200 p-4 max-w-sm"
+            className="fixed z-50 max-w-sm rounded-lg border border-emerald-200/90 bg-white p-4 shadow-xl"
             style={{
               left: `${popoverPosition.x}px`,
               top: `${popoverPosition.y}px`,
-              transform: 'translate(-50%, calc(-100% - 10px))'
+              transform: 'translate(-50%, calc(-100% - 12px))',
             }}
+            role="dialog"
+            aria-modal="true"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex justify-between items-start mb-2">
-              <h4 className="font-bold text-lg text-primary-900">{selectedTerm.display}</h4>
-              <button
-                onClick={handleClosePopover}
-                className="text-gray-400 hover:text-gray-600 ml-2"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="mb-3">
-              <p className="text-sm text-gray-700 mb-2">
-                <strong>Definition:</strong> {selectedTerm.definitionSimple}
-              </p>
-              
-              <p className="text-sm text-gray-700 mb-2">
-                <strong>Why it matters:</strong> {selectedTerm.whyItMatters}
-              </p>
-              
-              <p className="text-xs text-gray-600 italic">
-                Example: {selectedTerm.exampleSimple}
-              </p>
-            </div>
-            
-            <div className="flex gap-2">
-              <button
-                onClick={handleSaveTerm}
-                className="flex-1 px-3 py-2 bg-primary-600 text-white rounded hover:bg-primary-700 transition text-sm font-medium flex items-center justify-center gap-1"
-              >
-                Save term
-              </button>
-            </div>
-            
-            {selectedTerm.tags.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-gray-200">
-                <div className="flex flex-wrap gap-1">
-                  {selectedTerm.tags.map(tag => (
-                    <span
-                      key={tag}
-                      className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+            {openSpan.kind === 'dictionary' && (
+              <>
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <h4 className="text-lg font-bold capitalize text-emerald-950">
+                    {openSpan.surface}
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={closePopover}
+                    className="text-gray-400 hover:text-gray-600"
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
                 </div>
-              </div>
+                {aiLoading ? (
+                  <p className="text-sm text-slate-600">Loading definition…</p>
+                ) : (
+                  <p className="text-sm leading-relaxed text-slate-800">
+                    {aiDefinition || openSpan.definition}
+                  </p>
+                )}
+                {isAuthed && (
+                  <div className="mt-3 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        void handleSaveDictionary(
+                          openSpan.surface,
+                          aiDefinition || openSpan.definition
+                        )
+                      }
+                      className="flex-1 rounded bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700"
+                    >
+                      Save term
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {openSpan.kind === 'vocab' && (
+              <>
+                <div className="mb-2 flex items-start justify-between gap-2">
+                  <h4 className="text-lg font-bold text-primary-900">{openSpan.term.display}</h4>
+                  <button
+                    type="button"
+                    onClick={closePopover}
+                    className="text-gray-400 hover:text-gray-600"
+                    aria-label="Close"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="mb-3">
+                  <p className="mb-2 text-sm text-gray-700">
+                    <strong>Definition:</strong> {openSpan.term.definitionSimple}
+                  </p>
+
+                  <p className="mb-2 text-sm text-gray-700">
+                    <strong>Why it matters:</strong> {openSpan.term.whyItMatters}
+                  </p>
+
+                  <p className="text-xs italic text-gray-600">
+                    Example: {openSpan.term.exampleSimple}
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleSaveVocab(openSpan.term)}
+                    className="flex flex-1 items-center justify-center gap-1 rounded bg-primary-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-primary-700"
+                  >
+                    Save term
+                  </button>
+                </div>
+
+                {openSpan.term.tags.length > 0 && (
+                  <div className="mt-2 border-t border-gray-200 pt-2">
+                    <div className="flex flex-wrap gap-1">
+                      {openSpan.term.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-600"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </>
@@ -214,5 +291,3 @@ export default function VocabText({ text, onTermClick, onTermSave }: Props) {
     </>
   )
 }
-
-
