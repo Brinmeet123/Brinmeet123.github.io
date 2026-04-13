@@ -18,7 +18,7 @@ export const INSTRUCTION_COPY: Record<
     lines: [
       'Select physical exams to perform.',
       'Look for key findings.',
-      'Only order what you actually need.',
+      'Only select the exam sections you actually need.',
     ],
   },
   tests: {
