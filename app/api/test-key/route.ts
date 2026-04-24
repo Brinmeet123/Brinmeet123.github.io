@@ -13,23 +13,24 @@ export async function GET() {
       success: true,
       message: 'AI is working!',
       testResponse: response,
-      provider: 'Ollama',
+      provider: 'OpenAI',
       model,
     })
   } catch (error: any) {
     const isConnection =
       error?.message?.includes('ECONNREFUSED') ||
       error?.message?.includes('fetch failed') ||
-      error?.message?.includes('Ollama error')
+      error?.message?.includes('OpenAI error') ||
+      error?.message?.includes('Missing OPENAI_API_KEY')
 
     const { baseUrl } = getOllamaConfig()
 
     return NextResponse.json(
       {
         success: false,
-        error: isConnection ? 'Cannot reach Ollama' : error?.message || 'Unknown error',
+        error: isConnection ? 'Cannot reach OpenAI' : error?.message || 'Unknown error',
         details: isConnection
-          ? `Check Ollama is running (ollama serve), OLLAMA_BASE_URL (${baseUrl}), and that the model exists (ollama pull). Or set DEMO_MODE=true for mocks.`
+          ? `Check OPENAI_API_KEY and OPENAI_BASE_URL (${baseUrl}). Or set DEMO_MODE=true for mocks.`
           : error?.message || 'Check your configuration',
       },
       { status: 500 }

@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // No reachable Ollama on Vercel/serverless with localhost URL — use presets (do not call fetch to 127.0.0.1)
+    // If AI is disabled or missing configuration, use preset responses.
     if (!shouldAttemptOllamaForPatientChat()) {
       const presetResponse = getPresetPatientResponse(scenario, messages)
       return NextResponse.json({
@@ -126,7 +126,7 @@ Answer ONLY as the patient in first person. Keep responses short and conversatio
     if (
       shouldUseDemo &&
       (error?.message?.includes('fetch failed') ||
-        error?.message?.includes('Ollama') ||
+        error?.message?.includes('OpenAI') ||
         error?.message?.includes('ECONNREFUSED'))
     ) {
       console.log('LLM unavailable, falling back to demo mode')
@@ -141,13 +141,14 @@ Answer ONLY as the patient in first person. Keep responses short and conversatio
     }
 
     const errorMessage = error?.message || 'Failed to get patient response'
-    const isOllamaIssue =
-      errorMessage.includes('Ollama') ||
+    const isOpenAIIssue =
+      errorMessage.includes('OpenAI') ||
+      errorMessage.includes('OPENAI_API_KEY') ||
       errorMessage.includes('ECONNREFUSED') ||
       errorMessage.includes('fetch failed')
 
-    const hint = isOllamaIssue
-      ? 'Start Ollama (ollama serve), pull your model (e.g. ollama pull llama3.2), and set OLLAMA_BASE_URL / OLLAMA_MODEL if needed. Preset fallback should handle most history questions automatically.'
+    const hint = isOpenAIIssue
+      ? 'Set OPENAI_API_KEY and optionally OPENAI_MODEL / OPENAI_BASE_URL. Preset fallback should handle most history questions automatically.'
       : 'Check the error above. Preset fallback should handle many history questions even if AI is down.'
 
     return NextResponse.json(

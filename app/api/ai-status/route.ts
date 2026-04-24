@@ -8,24 +8,22 @@ export async function GET() {
 
   const aiWillUse = demoMode
     ? 'Mock responses only (DEMO_MODE=true)'
-    : `Ollama (${model} @ ${baseUrl})`
+    : `OpenAI (${model} @ ${baseUrl})`
 
   const hint = demoMode
-    ? 'Unset DEMO_MODE or set to false to use Ollama for real AI (requires ollama serve and a pulled model).'
-    : 'Requires `ollama serve` and `ollama pull ' +
-        model +
-        '`. On Vercel, set OLLAMA_BASE_URL to a reachable host. If your host requires auth, set OLLAMA_API_KEY (Bearer). Or set DEMO_MODE=true for mocks only.'
+    ? 'Unset DEMO_MODE or set to false to use OpenAI for real AI.'
+    : 'Set OPENAI_API_KEY in your environment. Optional: set OPENAI_MODEL and OPENAI_BASE_URL.'
 
   return NextResponse.json({
     ok: true,
-    provider: 'ollama',
+    provider: 'openai',
     model,
-    ollamaBaseUrl: baseUrl,
-    ollamaApiKeyConfigured: apiKeyConfigured,
+    openaiBaseUrl: baseUrl,
+    openaiApiKeyConfigured: apiKeyConfigured,
     demoModeEnv: demoMode,
-    ollamaEnabled: useOllama,
+    openaiEnabled: useOllama,
     aiWillUse,
     hint,
-    openAIConfigured: false,
+    openAIConfigured: apiKeyConfigured,
   })
 }
