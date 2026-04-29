@@ -65,7 +65,15 @@ export function shouldAttemptOllamaForPatientChat(): boolean {
   return true
 }
 
-export async function callLLM(messages: LLMMessage[]): Promise<string> {
+export type CallLLMOptions = {
+  /** Ask OpenAI for JSON-only output (helps structured routes like vocab definitions). */
+  responseFormatJson?: boolean
+}
+
+export async function callLLM(
+  messages: LLMMessage[],
+  options?: CallLLMOptions
+): Promise<string> {
   if (!OPENAI_API_KEY) {
     throw new Error('Missing OPENAI_API_KEY')
   }
@@ -73,14 +81,18 @@ export async function callLLM(messages: LLMMessage[]): Promise<string> {
   const url = `${OPENAI_BASE_URL}/chat/completions`
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
   headers.Authorization = `Bearer ${OPENAI_API_KEY}`
+  const body: Record<string, unknown> = {
+    model: OPENAI_MODEL,
+    messages: messages.map((m) => ({ role: toChatRole(m.role), content: m.content })),
+    stream: false,
+  }
+  if (options?.responseFormatJson) {
+    body.response_format = { type: 'json_object' }
+  }
   const res = await fetch(url, {
     method: 'POST',
     headers,
-    body: JSON.stringify({
-      model: OPENAI_MODEL,
-      messages: messages.map((m) => ({ role: toChatRole(m.role), content: m.content })),
-      stream: false,
-    }),
+    body: JSON.stringify(body),
   })
 
   if (!res.ok) {
